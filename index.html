@@ -57,6 +57,33 @@
                         </div>
                         <button id="go-to-coords" class="secondary">🌍 Ir para Coordenadas</button>
                     </div>
+
+                    <!-- Seção da Câmera (Mobile) -->
+                    <div class="camera-section" id="camera-section" style="display: none;">
+                        <div class="section-title">📸 Câmera Mobile</div>
+                        
+                        <div class="camera-controls">
+                            <button id="start-camera" class="gps">📷 Abrir Câmera</button>
+                            <button id="take-photo" class="secondary" style="display: none;">🎯 Tirar Foto com Coordenadas</button>
+                            <button id="close-camera" class="secondary" style="display: none;">❌ Fechar</button>
+                        </div>
+                        
+                        <div class="camera-preview" id="camera-preview" style="display: none;">
+                            <video id="video" autoplay playsinline></video>
+                            <canvas id="canvas" style="display: none;"></canvas>
+                            <div class="coords-overlay" id="coords-overlay">
+                                <span id="live-coords">--,--</span>
+                            </div>
+                        </div>
+                        
+                        <div class="photo-result" id="photo-result" style="display: none;">
+                            <img id="photo-preview" src="" alt="Preview da foto">
+                            <div class="photo-actions">
+                                <button id="use-photo" class="gps">✅ Usar Esta Foto</button>
+                                <button id="retake-photo" class="secondary">🔄 Tirar Outra</button>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="section-title">Registro de Pontos</div>
                     <div class="controls-grid">
@@ -127,6 +154,7 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Elementos do DOM
             const elements = {
                 map: document.getElementById('map'),
                 pointName: document.getElementById('point-name'),
@@ -157,9 +185,23 @@
                 manualLng: document.getElementById('manual-lng'),
                 goToCoords: document.getElementById('go-to-coords'),
                 tabButtons: document.querySelectorAll('.tab-button'),
-                tabContents: document.querySelectorAll('.tab-content')
+                tabContents: document.querySelectorAll('.tab-content'),
+                // Elementos da câmera
+                cameraSection: document.getElementById('camera-section'),
+                startCameraBtn: document.getElementById('start-camera'),
+                takePhotoBtn: document.getElementById('take-photo'),
+                closeCameraBtn: document.getElementById('close-camera'),
+                video: document.getElementById('video'),
+                canvas: document.getElementById('canvas'),
+                photoPreview: document.getElementById('photo-preview'),
+                photoResult: document.getElementById('photo-result'),
+                usePhotoBtn: document.getElementById('use-photo'),
+                retakePhotoBtn: document.getElementById('retake-photo'),
+                liveCoords: document.getElementById('live-coords'),
+                coordsOverlay: document.getElementById('coords-overlay')
             };
 
+            // Variáveis globais
             let points = [];
             let currentMarker = null;
             let gpsMarker = null;
@@ -169,7 +211,13 @@
             let currentLat = -3.1190;
             let currentLng = -60.0217;
             let isGpsActive = false;
+            
+            // Variáveis da câmera
+            let stream = null;
+            let currentPhotoData = null;
+            let coordsUpdateInterval = null;
 
+            // Municípios do Amazonas
             const municipios = [
                 { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
                 { id: 'alvaraes', nome: 'Alvarães', lat: -3.2142, lng: -64.8042 },
@@ -235,13 +283,21 @@
                 { id: 'urucurituba', nome: 'Urucurituba', lat: -3.1289, lng: -58.1558 }
             ];
 
+            // Inicialização
             function init() {
                 initMap();
                 setupEventListeners();
                 loadPointsFromStorage();
                 updateStats();
+                
+                // Mostrar seção da câmera apenas em mobile
+                if (isMobileDevice()) {
+                    elements.cameraSection.style.display = 'block';
+                    updateLiveCoords();
+                }
             }
 
+            // Funções do Mapa
             function initMap() {
                 map = L.map('map', {
                     center: [currentLat, currentLng],
@@ -297,6 +353,13 @@
                         document.getElementById(`${tabId}-tab`).classList.add('active');
                     });
                 });
+
+                // Event listeners da câmera
+                elements.startCameraBtn.addEventListener('click', startCamera);
+                elements.takePhotoBtn.addEventListener('click', takePhoto);
+                elements.usePhotoBtn.addEventListener('click', usePhoto);
+                elements.retakePhotoBtn.addEventListener('click', retakePhoto);
+                elements.closeCameraBtn.addEventListener('click', closeCamera);
             }
 
             function populateMunicipiosDropdown() {
@@ -359,6 +422,7 @@
                 showNotification(`Navegando para: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
             }
 
+            // Funções do GPS
             function toggleGps() {
                 if (isGpsActive) stopGps();
                 else startGps();
@@ -459,6 +523,7 @@
                 showNotification('GPS desativado.', 'info');
             }
 
+            // Funções dos Pontos
             function addPoint() {
                 const name = elements.pointName.value.trim() || `${getCategoryName(elements.pointCategory.value)} ${points.length + 1}`;
                 const description = elements.pointDesc.value.trim();
@@ -472,6 +537,11 @@
                     municipio: municipio ? municipio.nome : 'Desconhecido',
                     source: 'manual'
                 };
+
+                if (currentPhotoData) {
+                    point.photo = currentPhotoData;
+                    point.hasGeophoto = true;
+                }
 
                 points.push(point);
                 renderPointsList();
@@ -503,6 +573,11 @@
                     source: 'gps', accuracy: elements.gpsAccuracy.textContent
                 };
 
+                if (currentPhotoData) {
+                    point.photo = currentPhotoData;
+                    point.hasGeophoto = true;
+                }
+
                 points.push(point);
                 renderPointsList();
                 addPointToMap(point);
@@ -530,13 +605,28 @@
                 const dateStr = date.toLocaleDateString('pt-BR');
                 const timeStr = date.toLocaleTimeString('pt-BR');
                 
+                // Popup com foto se disponível
+                const photoHtml = point.photo ? 
+                    `<div class="photo-popup">
+                        <img src="${point.photo}" alt="Foto do ponto" style="max-width:100%;border:2px solid #4caf50;border-radius:5px;">
+                        ${point.hasGeophoto ? '<p style="text-align:center;color:#4caf50;font-weight:bold;">📍 Foto Georreferenciada</p>' : ''}
+                        <p style="font-size:0.8rem;color:#666;text-align:center;">
+                            Coordenadas: ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}<br>
+                            Data: ${dateStr} ${timeStr}
+                        </p>
+                     </div>` : '';
+                
                 marker.bindPopup(`
-                    <div style="min-width:180px;">
-                        <h3 style="margin:0 0 5px 0;color:${iconColor};font-size:0.9rem;">${point.name}</h3>
+                    <div style="min-width:200px;">
+                        <h3 style="margin:0 0 5px 0;color:${iconColor};font-size:0.9rem;">
+                            ${point.name} 
+                            ${point.hasGeophoto ? '📍' : ''}
+                        </h3>
                         <p style="margin:0 0 5px 0;font-size:0.8rem;">${point.description}</p>
                         <p style="margin:0 0 3px 0;font-size:0.7rem;color:#666;">${getCategoryName(point.category)} - ${point.municipio}</p>
                         ${isGps ? `<p style="margin:0 0 3px 0;font-size:0.7rem;color:#666;">Precisão: ${point.accuracy}m</p>` : ''}
                         <p style="margin:0;font-size:0.7rem;color:#666;">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</p>
+                        ${photoHtml}
                     </div>
                 `);
 
@@ -584,9 +674,11 @@
                     const dateStr = date.toLocaleDateString('pt-BR');
                     const timeStr = date.toLocaleTimeString('pt-BR');
                     const isGps = point.source === 'gps';
+                    const hasPhoto = point.photo ? 'point-has-photo' : '';
+                    const hasGeophoto = point.hasGeophoto ? 'point-has-geophoto' : '';
                     
                     return `
-                    <div class="point-item">
+                    <div class="point-item ${hasPhoto} ${hasGeophoto}">
                         <div class="point-info">
                             <div class="point-name">${point.name}</div>
                             <div class="point-details">
@@ -597,6 +689,7 @@
                         </div>
                         <div class="point-actions">
                             <button class="view-point" data-id="${point.id}" title="Visualizar">👁️</button>
+                            ${point.photo ? `<button class="view-photo" data-id="${point.id}" title="Ver Foto">📸</button>` : ''}
                             <button class="delete-point" data-id="${point.id}" title="Excluir">🗑️</button>
                         </div>
                     </div>
@@ -609,6 +702,23 @@
                         if (point) {
                             map.setView([point.lat, point.lng], 15);
                             if (point.marker) point.marker.openPopup();
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.view-photo').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const point = points.find(p => p.id === parseInt(this.dataset.id));
+                        if (point && point.photo) {
+                            const newWindow = window.open();
+                            newWindow.document.write(`
+                                <html>
+                                    <head><title>Foto - ${point.name}</title></head>
+                                    <body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;">
+                                        <img src="${point.photo}" style="max-width:100%;max-height:100%;" alt="Foto do ponto">
+                                    </body>
+                                </html>
+                            `);
                         }
                     });
                 });
@@ -632,6 +742,7 @@
                 currentLat = lat;
                 currentLng = lng;
                 elements.currentCoords.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                updateLiveCoords();
             }
 
             function getCategoryName(category) {
@@ -687,6 +798,7 @@
   <tr><td style="padding:5px;background:#f0f0f0;"><b>Hora:</b></td><td style="padding:5px;">${date.toLocaleTimeString('pt-BR')}</td></tr>
   <tr><td style="padding:5px;background:#f0f0f0;"><b>Coordenadas:</b></td><td style="padding:5px;">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</td></tr>
   ${point.accuracy ? `<tr><td style="padding:5px;background:#f0f0f0;"><b>Precisão:</b></td><td style="padding:5px;">${point.accuracy}m</td></tr>` : ''}
+  ${point.photo ? `<tr><td style="padding:5px;background:#f0f0f0;"><b>Foto:</b></td><td style="padding:5px;">Sim (georreferenciada)</td></tr>` : ''}
 </table>
 <br/><b>SISTEMA:</b> GeoMarker - DMOB`;
 
@@ -759,6 +871,161 @@
                 }
             }
 
+            // Funções da Câmera
+            function isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+
+            function updateLiveCoords() {
+                if (currentLat && currentLng) {
+                    const lat = currentLat.toFixed(6);
+                    const lng = currentLng.toFixed(6);
+                    elements.liveCoords.textContent = `${lat}, ${lng}`;
+                } else {
+                    elements.liveCoords.textContent = '--,--';
+                }
+            }
+
+            async function startCamera() {
+                try {
+                    showNotification('Acessando câmera...', 'info');
+                    
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }, 
+                        audio: false 
+                    });
+                    
+                    elements.video.srcObject = stream;
+                    elements.cameraPreview.style.display = 'block';
+                    elements.takePhotoBtn.style.display = 'inline-block';
+                    elements.closeCameraBtn.style.display = 'inline-block';
+                    elements.startCameraBtn.style.display = 'none';
+                    
+                    elements.coordsOverlay.style.display = 'block';
+                    coordsUpdateInterval = setInterval(updateLiveCoords, 1000);
+                    
+                    showNotification('Câmera pronta! As coordenadas aparecerão na foto.', 'success');
+                } catch (error) {
+                    console.error('Erro ao acessar câmera:', error);
+                    showNotification('Erro ao acessar câmera: ' + error.message, 'error');
+                }
+            }
+
+            function takePhoto() {
+                const context = elements.canvas.getContext('2d');
+                elements.canvas.width = elements.video.videoWidth;
+                elements.canvas.height = elements.video.videoHeight;
+                
+                context.drawImage(elements.video, 0, 0, elements.canvas.width, elements.canvas.height);
+                addCoordinatesWatermark(context, elements.canvas.width, elements.canvas.height);
+                
+                currentPhotoData = elements.canvas.toDataURL('image/jpeg', 0.8);
+                elements.photoPreview.src = currentPhotoData;
+                elements.photoPreview.classList.add('photo-with-coords');
+                
+                elements.photoResult.style.display = 'block';
+                elements.cameraPreview.style.display = 'none';
+                elements.takePhotoBtn.style.display = 'none';
+                elements.coordsOverlay.style.display = 'none';
+                
+                showNotification('Foto com coordenadas capturada!', 'success');
+            }
+
+            function addCoordinatesWatermark(context, width, height) {
+                const coordsText = `📍 ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+                const timestamp = new Date().toLocaleString('pt-BR');
+                const municipio = municipios.find(m => m.id === elements.municipioSelect.value)?.nome || 'Desconhecido';
+                
+                context.font = 'bold 24px Arial';
+                context.textAlign = 'right';
+                context.textBaseline = 'top';
+                
+                const textMetrics = context.measureText(coordsText);
+                const textWidth = textMetrics.width;
+                const padding = 15;
+                
+                // Coordenadas (canto superior direito)
+                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                context.fillRect(width - textWidth - padding * 2, 10, textWidth + padding * 2, 35);
+                context.fillStyle = '#4caf50';
+                context.fillText(coordsText, width - padding, 15);
+                
+                // Data/hora (canto inferior esquerdo)
+                context.font = 'bold 18px Arial';
+                context.textAlign = 'left';
+                const timeMetrics = context.measureText(timestamp);
+                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                context.fillRect(10, height - 55, timeMetrics.width + padding * 2, 45);
+                context.fillStyle = 'white';
+                context.fillText(timestamp, 15, height - 50);
+                
+                // Município (canto inferior direito)
+                context.textAlign = 'right';
+                const municipioMetrics = context.measureText(municipio);
+                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                context.fillRect(width - municipioMetrics.width - padding * 2, height - 55, municipioMetrics.width + padding * 2, 45);
+                context.fillStyle = '#2196f3';
+                context.fillText(municipio, width - padding, height - 50);
+                
+                // Borda de identificação
+                context.strokeStyle = '#4caf50';
+                context.lineWidth = 4;
+                context.strokeRect(2, 2, width - 4, height - 4);
+            }
+
+            function usePhoto() {
+                if (!currentPhotoData) {
+                    showNotification('Nenhuma foto capturada!', 'warning');
+                    return;
+                }
+
+                const now = new Date();
+                const pointName = `Foto_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
+                
+                elements.pointName.value = pointName;
+                elements.pointDesc.value = `📸 Foto georreferenciada\n📍 Coordenadas: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}\n📅 Data: ${now.toLocaleString('pt-BR')}\n🏙️ Município: ${municipios.find(m => m.id === elements.municipioSelect.value)?.nome || 'Desconhecido'}`;
+                elements.pointCategory.value = 'patologias-pista';
+                
+                showNotification('Foto georreferenciada carregada! Preencha os dados e registre o ponto.', 'success');
+                closeCamera();
+            }
+
+            function retakePhoto() {
+                elements.photoResult.style.display = 'none';
+                elements.cameraPreview.style.display = 'block';
+                elements.takePhotoBtn.style.display = 'inline-block';
+                elements.coordsOverlay.style.display = 'block';
+                currentPhotoData = null;
+                elements.photoPreview.classList.remove('photo-with-coords');
+            }
+
+            function closeCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                if (coordsUpdateInterval) {
+                    clearInterval(coordsUpdateInterval);
+                    coordsUpdateInterval = null;
+                }
+                
+                elements.video.srcObject = null;
+                elements.cameraPreview.style.display = 'none';
+                elements.photoResult.style.display = 'none';
+                elements.takePhotoBtn.style.display = 'none';
+                elements.closeCameraBtn.style.display = 'none';
+                elements.coordsOverlay.style.display = 'none';
+                elements.startCameraBtn.style.display = 'inline-block';
+                currentPhotoData = null;
+                elements.photoPreview.classList.remove('photo-with-coords');
+            }
+
+            // Inicializar aplicação
             init();
         });
     </script>
