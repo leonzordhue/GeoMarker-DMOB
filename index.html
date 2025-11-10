@@ -1127,10 +1127,12 @@
                 
                 const video = document.getElementById('video-fullscreen');
                 const cameraPreview = document.getElementById('camera-fullscreen-preview');
+                const cameraControls = document.querySelector('.camera-fullscreen-controls');
                 
-                if (video && cameraPreview) {
+                if (video && cameraPreview && cameraControls) {
                     video.srcObject = state.stream;
                     cameraPreview.style.display = 'block';
+                    cameraControls.style.display = 'flex';
                     
                     // Entrar no modo tela cheia
                     document.getElementById('camera-fullscreen').style.display = 'flex';
@@ -1148,8 +1150,9 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const photoResult = document.getElementById('camera-fullscreen-result');
             const photoPreview = document.getElementById('photo-preview-fullscreen');
+            const cameraControls = document.querySelector('.camera-fullscreen-controls');
             
-            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview) {
+            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview || !cameraControls) {
                 console.error('Elementos da foto não encontrados');
                 return;
             }
@@ -1192,6 +1195,7 @@
             photoPreview.src = state.currentPhotoData;
             photoResult.style.display = 'flex';
             cameraPreview.style.display = 'none';
+            cameraControls.style.display = 'none';
         }
 
         function savePhotoToDevice() {
@@ -1222,9 +1226,11 @@
         function retakePhotoFullscreen() {
             const photoResult = document.getElementById('camera-fullscreen-result');
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
+            const cameraControls = document.querySelector('.camera-fullscreen-controls');
             
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
+            if (cameraControls) cameraControls.style.display = 'flex';
             state.currentPhotoData = null;
         }
 
@@ -1237,6 +1243,10 @@
             document.getElementById('camera-fullscreen').style.display = 'none';
             document.getElementById('camera-fullscreen-preview').style.display = 'none';
             document.getElementById('camera-fullscreen-result').style.display = 'none';
+            
+            const cameraControls = document.querySelector('.camera-fullscreen-controls');
+            if (cameraControls) cameraControls.style.display = 'flex';
+            
             state.isCameraFullscreen = false;
         }
 
