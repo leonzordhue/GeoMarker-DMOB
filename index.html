@@ -587,7 +587,7 @@
                 <video id="video-fullscreen" autoplay playsinline></video>
                 <canvas id="canvas-fullscreen"></canvas>
             </div>
-            <div class="camera-fullscreen-controls">
+            <div class="camera-fullscreen-controls" id="camera-fullscreen-controls">
                 <button id="take-photo-fullscreen" class="gps">📷</button>
             </div>
             <div class="camera-fullscreen-result" id="camera-fullscreen-result">
@@ -1127,7 +1127,7 @@
                 
                 const video = document.getElementById('video-fullscreen');
                 const cameraPreview = document.getElementById('camera-fullscreen-preview');
-                const cameraControls = document.querySelector('.camera-fullscreen-controls');
+                const cameraControls = document.getElementById('camera-fullscreen-controls');
                 
                 if (video && cameraPreview && cameraControls) {
                     video.srcObject = state.stream;
@@ -1150,7 +1150,7 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const photoResult = document.getElementById('camera-fullscreen-result');
             const photoPreview = document.getElementById('photo-preview-fullscreen');
-            const cameraControls = document.querySelector('.camera-fullscreen-controls');
+            const cameraControls = document.getElementById('camera-fullscreen-controls');
             
             if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview || !cameraControls) {
                 console.error('Elementos da foto não encontrados');
@@ -1226,7 +1226,7 @@
         function retakePhotoFullscreen() {
             const photoResult = document.getElementById('camera-fullscreen-result');
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
-            const cameraControls = document.querySelector('.camera-fullscreen-controls');
+            const cameraControls = document.getElementById('camera-fullscreen-controls');
             
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
@@ -1244,7 +1244,7 @@
             document.getElementById('camera-fullscreen-preview').style.display = 'none';
             document.getElementById('camera-fullscreen-result').style.display = 'none';
             
-            const cameraControls = document.querySelector('.camera-fullscreen-controls');
+            const cameraControls = document.getElementById('camera-fullscreen-controls');
             if (cameraControls) cameraControls.style.display = 'flex';
             
             state.isCameraFullscreen = false;
