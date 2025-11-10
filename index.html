@@ -332,30 +332,6 @@
             flex-direction: column; 
         }
         
-        .stats { 
-            display: flex; 
-            justify-content: space-around; 
-            margin-top: 15px; 
-            padding: 12px; 
-            background: rgba(0, 0, 0, 0.3); 
-            border-radius: 8px; 
-        }
-        
-        .stat-item { 
-            text-align: center; 
-        }
-        
-        .stat-value { 
-            font-size: 1.5rem; 
-            font-weight: bold; 
-            color: #8bc34a; 
-        }
-        
-        .stat-label { 
-            font-size: 0.8rem; 
-            color: #aaa; 
-        }
-        
         /* Câmera - Modo Normal */
         .camera-section { 
             background: rgba(0, 0, 0, 0.3); 
@@ -370,83 +346,6 @@
             display: flex; 
             gap: 10px; 
             margin-bottom: 15px; 
-        }
-        
-        .camera-preview { 
-            position: relative; 
-            width: 100%; 
-            background: #000; 
-            border-radius: 8px; 
-            overflow: hidden; 
-            margin-bottom: 15px; 
-            display: none; 
-        }
-        
-        .camera-preview video { 
-            width: 100%; 
-            height: auto; 
-            max-height: 300px; 
-            object-fit: cover; 
-            display: block;
-        }
-        
-        .photo-result { 
-            text-align: center; 
-            margin-bottom: 15px; 
-            display: none; 
-        }
-        
-        #photo-preview { 
-            max-width: 100%; 
-            max-height: 300px; 
-            border-radius: 8px; 
-            border: 2px solid #4caf50; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-        
-        .photo-actions { 
-            display: flex; 
-            gap: 10px; 
-            justify-content: center; 
-            margin-top: 15px; 
-        }
-        
-        .coords-overlay { 
-            position: absolute; 
-            top: 10px; 
-            right: 10px; 
-            background: rgba(0, 0, 0, 0.8); 
-            color: white; 
-            padding: 8px 12px; 
-            border-radius: 8px; 
-            font-family: 'Courier New', monospace; 
-            font-size: 12px; 
-            font-weight: bold; 
-            z-index: 1000; 
-            border: 2px solid #4caf50; 
-            display: none; 
-        }
-        
-        .camera-loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 50px;
-            color: #8bc34a;
-            font-weight: bold;
-            margin: 10px 0;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-        }
-        
-        .camera-error {
-            background: rgba(255, 68, 68, 0.8);
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 10px 0;
-            display: none;
         }
         
         .point-has-photo::after { 
@@ -496,21 +395,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-        
-        .camera-fullscreen-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            border: 2px solid #4caf50;
-            max-width: 300px;
-            z-index: 10001;
         }
         
         .camera-fullscreen-controls {
@@ -577,11 +461,6 @@
             
             .controls-section {
                 min-width: 100%;
-            }
-            
-            .camera-fullscreen-info {
-                font-size: 12px;
-                max-width: 250px;
             }
         }
     </style>
@@ -683,18 +562,6 @@
                         <button id="clear-points" class="secondary">🗑️ Limpar</button>
                         <button id="export-kml" class="secondary">📤 Exportar KML</button>
                     </div>
-                    
-                    <!-- Estatísticas -->
-                    <div class="stats">
-                        <div class="stat-item">
-                            <div class="stat-value" id="total-points">0</div>
-                            <div class="stat-label">Total de Pontos</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="categories-count">0</div>
-                            <div class="stat-label">Categorias</div>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Lista de Pontos -->
@@ -719,13 +586,6 @@
             <div class="camera-fullscreen-preview" id="camera-fullscreen-preview">
                 <video id="video-fullscreen" autoplay playsinline></video>
                 <canvas id="canvas-fullscreen"></canvas>
-                <div class="camera-fullscreen-info" id="camera-fullscreen-info">
-                    <div id="info-date">--/--/----</div>
-                    <div id="info-time">--:--:--</div>
-                    <div id="info-municipio">Município: --</div>
-                    <div id="info-category">Categoria: --</div>
-                    <div id="info-coords">Coordenadas: --, --</div>
-                </div>
             </div>
             <div class="camera-fullscreen-controls">
                 <button id="take-photo-fullscreen" class="gps">📷</button>
@@ -911,7 +771,6 @@
             state.currentLat = lat;
             state.currentLng = lng;
             document.getElementById('current-coords').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            updateCameraInfo();
         }
 
         function updateMarker(lat, lng) {
@@ -1224,9 +1083,7 @@
         }
 
         function updateStats() {
-            document.getElementById('total-points').textContent = state.points.length;
-            document.getElementById('categories-count').textContent = 
-                state.points.length > 0 ? new Set(state.points.map(p => p.category)).size : '0';
+            // Removido conforme solicitado
         }
 
         function exportKml() {
@@ -1261,19 +1118,6 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        function updateCameraInfo() {
-            const now = new Date();
-            const municipioSelect = document.getElementById('municipio-select');
-            const municipio = municipios.find(m => m.id === municipioSelect.value)?.nome || 'Desconhecido';
-            const categoria = document.getElementById('point-category').options[document.getElementById('point-category').selectedIndex].text;
-            
-            document.getElementById('info-date').textContent = now.toLocaleDateString('pt-BR');
-            document.getElementById('info-time').textContent = now.toLocaleTimeString('pt-BR');
-            document.getElementById('info-municipio').textContent = `Município: ${municipio}`;
-            document.getElementById('info-category').textContent = `Categoria: ${categoria}`;
-            document.getElementById('info-coords').textContent = `Coordenadas: ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`;
-        }
-
         async function startCameraFullscreen() {
             try {
                 state.stream = await navigator.mediaDevices.getUserMedia({ 
@@ -1287,7 +1131,6 @@
                 if (video && cameraPreview) {
                     video.srcObject = state.stream;
                     cameraPreview.style.display = 'block';
-                    updateCameraInfo();
                     
                     // Entrar no modo tela cheia
                     document.getElementById('camera-fullscreen').style.display = 'flex';
@@ -1317,26 +1160,33 @@
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Adicionar informações no canto superior direito
+            // Adicionar informações no canto superior direito - SEM CAIXA DE FUNDO
             const now = new Date();
             const municipioSelect = document.getElementById('municipio-select');
             const municipio = municipios.find(m => m.id === municipioSelect.value)?.nome || 'Desconhecido';
             const categoria = document.getElementById('point-category').options[document.getElementById('point-category').selectedIndex].text;
+            const identificacao = document.getElementById('point-name').value || 'Sem identificação';
             
-            // Fundo semi-transparente para as informações
-            context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            context.fillRect(canvas.width - 300, 10, 290, 120);
-            
-            // Informações da foto
-            context.font = 'bold 14px Arial';
+            // Informações da foto - APENAS TEXTO
+            context.font = 'bold 16px Arial';
             context.fillStyle = 'white';
+            context.strokeStyle = 'black';
+            context.lineWidth = 3;
             context.textAlign = 'right';
             
-            context.fillText(`Data: ${now.toLocaleDateString('pt-BR')}`, canvas.width - 15, 30);
-            context.fillText(`Hora: ${now.toLocaleTimeString('pt-BR')}`, canvas.width - 15, 50);
-            context.fillText(`Local: ${municipio}`, canvas.width - 15, 70);
-            context.fillText(`Categoria: ${categoria}`, canvas.width - 15, 90);
-            context.fillText(`Coordenadas: ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, canvas.width - 15, 110);
+            // Adicionar contorno preto para melhor legibilidade
+            context.strokeText(identificacao, canvas.width - 15, 30);
+            context.strokeText(`${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`, canvas.width - 15, 55);
+            context.strokeText(municipio, canvas.width - 15, 80);
+            context.strokeText(categoria, canvas.width - 15, 105);
+            context.strokeText(`${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, canvas.width - 15, 130);
+            
+            // Adicionar texto branco
+            context.fillText(identificacao, canvas.width - 15, 30);
+            context.fillText(`${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`, canvas.width - 15, 55);
+            context.fillText(municipio, canvas.width - 15, 80);
+            context.fillText(categoria, canvas.width - 15, 105);
+            context.fillText(`${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, canvas.width - 15, 130);
             
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
@@ -1362,7 +1212,7 @@
             if (!state.currentPhotoData) return;
             
             const now = new Date();
-            document.getElementById('point-name').value = `Foto_${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
+            document.getElementById('point-name').value = document.getElementById('point-name').value || `Foto_${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
             document.getElementById('point-desc').value = 
                 `Foto georreferenciada\nCoordenadas: ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`;
             
