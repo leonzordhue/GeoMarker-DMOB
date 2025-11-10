@@ -11,32 +11,29 @@
     <div class="container">
         <header>
             <h1>GeoMarker - DMOB</h1>
-            <p class="description">Sistema de marcação geográfica para obras de arte especiais e infraestrutura rodoviária</p>
+            <p>Sistema de marcação geográfica para obras de arte especiais</p>
         </header>
         
         <div class="app-content">
+            <!-- Mapa -->
             <div class="map-section">
                 <div class="map-container">
                     <div id="map"></div>
                     <div class="location-search">
-                        <input type="text" id="search-location" placeholder="Digite o nome do município...">
+                        <input type="text" id="search-location" placeholder="Buscar município...">
                     </div>
                     <div class="map-controls">
-                        <button id="zoom-in" title="Zoom In">+</button>
-                        <button id="zoom-out" title="Zoom Out">-</button>
-                        <button id="locate-me" title="Minha Localização" class="gps">📍</button>
+                        <button id="zoom-in">+</button>
+                        <button id="zoom-out">-</button>
+                        <button id="locate-me" class="gps">📍</button>
                     </div>
-                    <div class="marker-info" id="marker-info">
-                        <strong id="info-name"></strong>
-                        <div id="info-coords"></div>
-                        <div id="info-desc"></div>
-                    </div>
-                    <div class="gps-status" id="gps-status" style="display: none;">
-                        GPS: <span id="gps-accuracy">--</span>m de precisão
+                    <div class="gps-status" id="gps-status">
+                        GPS: <span id="gps-accuracy">--</span>m
                     </div>
                 </div>
             </div>
             
+            <!-- Controles -->
             <div class="controls-section">
                 <div class="tab-buttons">
                     <div class="tab-button active" data-tab="controls">Controles</div>
@@ -44,56 +41,60 @@
                 </div>
                 
                 <div id="controls-tab" class="tab-content active">
-                    <div class="municipio-selector">
-                        <label for="municipio-select">Município do Amazonas:</label>
+                    <!-- Município e Coordenadas -->
+                    <div class="control-group">
+                        <label>Município:</label>
                         <select id="municipio-select"></select>
                     </div>
                     
                     <div class="manual-coords">
-                        <label>Coordenadas Manuais:</label>
+                        <label>Coordenadas:</label>
                         <div class="coord-inputs">
-                            <input type="text" id="manual-lat" placeholder="Latitude (ex: -3.1190)">
-                            <input type="text" id="manual-lng" placeholder="Longitude (ex: -60.0217)">
+                            <input type="text" id="manual-lat" placeholder="Latitude">
+                            <input type="text" id="manual-lng" placeholder="Longitude">
+                            <button id="go-to-coords" class="secondary">🌍</button>
                         </div>
-                        <button id="go-to-coords" class="secondary">🌍 Ir para Coordenadas</button>
                     </div>
 
-                    <!-- Seção da Câmera (Mobile) -->
-                    <div class="camera-section" id="camera-section" style="display: none;">
-                        <div class="section-title">📸 Câmera Mobile</div>
-                        
+                    <!-- Câmera Mobile -->
+                    <div class="camera-section" id="camera-section">
                         <div class="camera-controls">
-                            <button id="start-camera" class="gps">📷 Abrir Câmera</button>
-                            <button id="take-photo" class="secondary" style="display: none;">🎯 Tirar Foto com Coordenadas</button>
-                            <button id="close-camera" class="secondary" style="display: none;">❌ Fechar</button>
+                            <button id="start-camera" class="gps">📷 Câmera</button>
+                            <button id="take-photo" class="secondary" disabled>🎯 Foto</button>
+                            <button id="close-camera" class="secondary" disabled>❌</button>
                         </div>
                         
-                        <div class="camera-preview" id="camera-preview" style="display: none;">
+                        <!-- Estados da câmera -->
+                        <div class="camera-loading" id="camera-loading" style="display:none;">
+                            Iniciando câmera...
+                        </div>
+                        <div class="camera-error" id="camera-error" style="display:none;"></div>
+                        
+                        <div class="camera-preview" id="camera-preview">
                             <video id="video" autoplay playsinline></video>
-                            <canvas id="canvas" style="display: none;"></canvas>
+                            <canvas id="canvas"></canvas>
                             <div class="coords-overlay" id="coords-overlay">
                                 <span id="live-coords">--,--</span>
                             </div>
                         </div>
-                        
-                        <div class="photo-result" id="photo-result" style="display: none;">
-                            <img id="photo-preview" src="" alt="Preview da foto">
+                        <div class="photo-result" id="photo-result">
+                            <img id="photo-preview" src="" alt="Preview">
                             <div class="photo-actions">
-                                <button id="use-photo" class="gps">✅ Usar Esta Foto</button>
-                                <button id="retake-photo" class="secondary">🔄 Tirar Outra</button>
+                                <button id="use-photo" class="gps">✅ Usar</button>
+                                <button id="retake-photo" class="secondary">🔄 Nova</button>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="section-title">Registro de Pontos</div>
+                    <!-- Registro de Pontos -->
                     <div class="controls-grid">
                         <div class="control-group">
-                            <label for="point-name">Identificação:</label>
+                            <label>Identificação:</label>
                             <input type="text" id="point-name" placeholder="Nome do ponto">
                         </div>
                         
                         <div class="control-group">
-                            <label for="point-category">Categoria:</label>
+                            <label>Categoria:</label>
                             <select id="point-category">
                                 <option value="ponte-oae">Ponte - OAE</option>
                                 <option value="bueiro-oae">Bueiro - OAE</option>
@@ -102,932 +103,586 @@
                                 <option value="jazida">Jazida</option>
                                 <option value="ramal">Ramal</option>
                                 <option value="rodovia">Rodovia</option>
-                                <option value="patologias-pista">Patologias na Pista</option>
+                                <option value="patologias-pista">Patologias</option>
                                 <option value="viaduto-oae">Viaduto - OAE</option>
                             </select>
                         </div>
                         
                         <div class="control-group full-width">
-                            <label for="point-desc">Descrição/Observações:</label>
-                            <textarea id="point-desc" rows="2" placeholder="Descrição detalhada e observações"></textarea>
+                            <label>Descrição:</label>
+                            <textarea id="point-desc" rows="2" placeholder="Observações"></textarea>
                         </div>
                         
                         <div class="control-group full-width">
                             <label>Coordenadas Atuais:</label>
-                            <input type="text" id="current-coords" readonly placeholder="Latitude, Longitude">
+                            <input type="text" id="current-coords" readonly>
                         </div>
                     </div>
                     
+                    <!-- Botões Principais -->
                     <div class="buttons">
-                        <button id="add-point">📍 Registrar Ponto</button>
-                        <button id="add-gps-point" class="gps">🎯 Registrar com GPS</button>
-                        <button id="center-map" class="secondary">🗺️ Centralizar</button>
-                        <button id="clear-points">🗑️ Limpar</button>
-                        <button id="export-kml">📤 Exportar KML</button>
+                        <button id="add-point">📍 Registrar</button>
+                        <button id="add-gps-point" class="gps">🎯 GPS</button>
+                        <button id="center-map" class="secondary">🗺️</button>
+                        <button id="clear-points" class="secondary">🗑️</button>
+                        <button id="export-kml" class="secondary">📤 KML</button>
                     </div>
                     
+                    <!-- Estatísticas -->
                     <div class="stats">
-                        <div class="stat-item"><div class="stat-value" id="total-points">0</div><div class="stat-label">Total</div></div>
-                        <div class="stat-item"><div class="stat-value" id="categories-count">0</div><div class="stat-label">Categorias</div></div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-points">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="categories-count">0</div>
+                            <div class="stat-label">Categorias</div>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- Lista de Pontos -->
                 <div id="points-tab" class="tab-content">
                     <div class="points-list" id="points-container"></div>
                 </div>
             </div>
         </div>
-        
-        <div class="instructions">
-            <h3>Como usar:</h3>
-            <ol>
-                <li>Use coordenadas manuais ou clique no mapa para definir localização</li>
-                <li>Ative o GPS para registro em tempo real</li>
-                <li>Preencha identificação, categoria e descrição</li>
-                <li>Registre pontos manualmente ou com GPS ativo</li>
-                <li>Acompanhe todos os pontos na aba "Pontos"</li>
-                <li>Exporte os pontos em formato KML quando necessário</li>
-            </ol>
-        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
+        // Configuração inicial
+        const config = {
+            center: [-3.1190, -60.0217],
+            zoom: 10,
+            minZoom: 6,
+            maxZoom: 18
+        };
+
+        // Municípios do Amazonas (apenas os principais para exemplo)
+        const municipios = [
+            { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
+            { id: 'parintins', nome: 'Parintins', lat: -2.6276, lng: -56.7358 },
+            { id: 'itacoatiara', nome: 'Itacoatiara', lat: -3.1431, lng: -58.4442 },
+            { id: 'manacapuru', nome: 'Manacapuru', lat: -3.3008, lng: -60.6206 },
+            { id: 'coari', nome: 'Coari', lat: -4.0850, lng: -63.1414 }
+        ];
+
+        // Estado da aplicação
+        let state = {
+            points: [],
+            currentMarker: null,
+            gpsMarker: null,
+            map: null,
+            currentLat: -3.1190,
+            currentLng: -60.0217,
+            isGpsActive: false,
+            stream: null,
+            currentPhotoData: null
+        };
+
+        // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
-            // Elementos do DOM
-            const elements = {
-                map: document.getElementById('map'),
-                pointName: document.getElementById('point-name'),
-                pointDesc: document.getElementById('point-desc'),
-                pointCategory: document.getElementById('point-category'),
-                currentCoords: document.getElementById('current-coords'),
-                addPoint: document.getElementById('add-point'),
-                addGpsPoint: document.getElementById('add-gps-point'),
-                clearPoints: document.getElementById('clear-points'),
-                exportKml: document.getElementById('export-kml'),
-                centerMap: document.getElementById('center-map'),
-                pointsContainer: document.getElementById('points-container'),
-                pointsCount: document.getElementById('points-count'),
-                searchLocation: document.getElementById('search-location'),
-                markerInfo: document.getElementById('marker-info'),
-                infoName: document.getElementById('info-name'),
-                infoCoords: document.getElementById('info-coords'),
-                infoDesc: document.getElementById('info-desc'),
-                totalPoints: document.getElementById('total-points'),
-                categoriesCount: document.getElementById('categories-count'),
-                municipioSelect: document.getElementById('municipio-select'),
-                zoomIn: document.getElementById('zoom-in'),
-                zoomOut: document.getElementById('zoom-out'),
-                locateMe: document.getElementById('locate-me'),
-                gpsStatus: document.getElementById('gps-status'),
-                gpsAccuracy: document.getElementById('gps-accuracy'),
-                manualLat: document.getElementById('manual-lat'),
-                manualLng: document.getElementById('manual-lng'),
-                goToCoords: document.getElementById('go-to-coords'),
-                tabButtons: document.querySelectorAll('.tab-button'),
-                tabContents: document.querySelectorAll('.tab-content'),
-                // Elementos da câmera
-                cameraSection: document.getElementById('camera-section'),
-                startCameraBtn: document.getElementById('start-camera'),
-                takePhotoBtn: document.getElementById('take-photo'),
-                closeCameraBtn: document.getElementById('close-camera'),
-                video: document.getElementById('video'),
-                canvas: document.getElementById('canvas'),
-                photoPreview: document.getElementById('photo-preview'),
-                photoResult: document.getElementById('photo-result'),
-                usePhotoBtn: document.getElementById('use-photo'),
-                retakePhotoBtn: document.getElementById('retake-photo'),
-                liveCoords: document.getElementById('live-coords'),
-                coordsOverlay: document.getElementById('coords-overlay')
-            };
-
-            // Variáveis globais
-            let points = [];
-            let currentMarker = null;
-            let gpsMarker = null;
-            let gpsAccuracyCircle = null;
-            let gpsWatchId = null;
-            let map = null;
-            let currentLat = -3.1190;
-            let currentLng = -60.0217;
-            let isGpsActive = false;
+            initMap();
+            setupEventListeners();
+            loadPointsFromStorage();
+            updateStats();
             
-            // Variáveis da câmera
-            let stream = null;
-            let currentPhotoData = null;
-            let coordsUpdateInterval = null;
-
-            // Municípios do Amazonas
-            const municipios = [
-                { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
-                { id: 'alvaraes', nome: 'Alvarães', lat: -3.2142, lng: -64.8042 },
-                { id: 'amatura', nome: 'Amaturá', lat: -3.3656, lng: -68.1914 },
-                { id: 'anama', nome: 'Anamã', lat: -3.5797, lng: -61.3989 },
-                { id: 'anori', nome: 'Anori', lat: -3.7461, lng: -61.6575 },
-                { id: 'apui', nome: 'Apuí', lat: -7.1947, lng: -59.8931 },
-                { id: 'atalaia-do-norte', nome: 'Atalaia do Norte', lat: -4.3722, lng: -70.1914 },
-                { id: 'autazes', nome: 'Autazes', lat: -3.5858, lng: -59.1306 },
-                { id: 'barcelos', nome: 'Barcelos', lat: -0.9758, lng: -62.9239 },
-                { id: 'barreirinha', nome: 'Barreirinha', lat: -2.7989, lng: -57.0678 },
-                { id: 'benjamin-constant', nome: 'Benjamin Constant', lat: -4.3758, lng: -70.0319 },
-                { id: 'beruri', nome: 'Beruri', lat: -3.8989, lng: -61.3708 },
-                { id: 'boa-vista-do-ramos', nome: 'Boa Vista do Ramos', lat: -2.9739, lng: -57.5878 },
-                { id: 'boca-do-acre', nome: 'Boca do Acre', lat: -8.7522, lng: -67.3978 },
-                { id: 'borba', nome: 'Borba', lat: -4.3914, lng: -59.5886 },
-                { id: 'caapiranga', nome: 'Caapiranga', lat: -3.3289, lng: -61.2114 },
-                { id: 'canutama', nome: 'Canutama', lat: -6.5339, lng: -64.3831 },
-                { id: 'carauari', nome: 'Carauari', lat: -4.8825, lng: -66.8958 },
-                { id: 'careiro', nome: 'Careiro', lat: -3.7681, lng: -60.3689 },
-                { id: 'careiro-da-varzea', nome: 'Careiro da Várzea', lat: -3.1969, lng: -59.8258 },
-                { id: 'coari', nome: 'Coari', lat: -4.0850, lng: -63.1414 },
-                { id: 'codajas', nome: 'Codajás', lat: -3.8367, lng: -62.0569 },
-                { id: 'eirunepe', nome: 'Eirunepé', lat: -6.6600, lng: -69.8736 },
-                { id: 'envira', nome: 'Envira', lat: -7.4381, lng: -70.0281 },
-                { id: 'fonte-boa', nome: 'Fonte Boa', lat: -2.5139, lng: -66.0919 },
-                { id: 'guajara', nome: 'Guajará', lat: -7.5378, lng: -72.5814 },
-                { id: 'humaita', nome: 'Humaitá', lat: -7.5114, lng: -63.0206 },
-                { id: 'ipixuna', nome: 'Ipixuna', lat: -7.0489, lng: -71.6939 },
-                { id: 'iranduba', nome: 'Iranduba', lat: -3.2850, lng: -60.1861 },
-                { id: 'itacoatiara', nome: 'Itacoatiara', lat: -3.1431, lng: -58.4442 },
-                { id: 'itamarati', nome: 'Itamarati', lat: -6.4389, lng: -68.2439 },
-                { id: 'itapiranga', nome: 'Itapiranga', lat: -2.7461, lng: -58.0208 },
-                { id: 'japura', nome: 'Japurá', lat: -1.8822, lng: -66.9992 },
-                { id: 'jurua', nome: 'Juruá', lat: -3.4758, lng: -66.0639 },
-                { id: 'jutaí', nome: 'Jutaí', lat: -2.7481, lng: -66.7678 },
-                { id: 'lábrea', nome: 'Lábrea', lat: -7.2589, lng: -64.7958 },
-                { id: 'manacapuru', nome: 'Manacapuru', lat: -3.3008, lng: -60.6206 },
-                { id: 'manaquiri', nome: 'Manaquiri', lat: -3.4139, lng: -60.4608 },
-                { id: 'manicore', nome: 'Manicoré', lat: -5.8092, lng: -61.3003 },
-                { id: 'maraa', nome: 'Maraã', lat: -1.8539, lng: -65.5731 },
-                { id: 'maues', nome: 'Maués', lat: -3.3839, lng: -57.7186 },
-                { id: 'nhamunda', nome: 'Nhamundá', lat: -2.1869, lng: -56.7139 },
-                { id: 'nova-olinda-do-norte', nome: 'Nova Olinda do Norte', lat: -3.8889, lng: -59.0942 },
-                { id: 'novo-airão', nome: 'Novo Airão', lat: -2.6208, lng: -60.9439 },
-                { id: 'novo-aripuana', nome: 'Novo Aripuanã', lat: -5.1258, lng: -60.3739 },
-                { id: 'parintins', nome: 'Parintins', lat: -2.6276, lng: -56.7358 },
-                { id: 'pauini', nome: 'Pauini', lat: -7.7139, lng: -66.9764 },
-                { id: 'presidente-figueiredo', nome: 'Presidente Figueiredo', lat: -2.0508, lng: -60.0239 },
-                { id: 'rio-preto-da-eva', nome: 'Rio Preto da Eva', lat: -2.6975, lng: -59.6958 },
-                { id: 'santa-isabel-do-rio-negro', nome: 'Santa Isabel do Rio Negro', lat: -0.4139, lng: -65.0189 },
-                { id: 'santo-antonio-do-ica', nome: 'Santo Antônio do Içá', lat: -3.1022, lng: -67.9397 },
-                { id: 'sao-gabriel-da-cachoeira', nome: 'São Gabriel da Cachoeira', lat: -0.1306, lng: -67.0892 },
-                { id: 'sao-paulo-de-olivenca', nome: 'São Paulo de Olivença', lat: -3.4658, lng: -68.9508 },
-                { id: 'sao-sebastiao-do-uatuma', nome: 'São Sebastião do Uatumã', lat: -2.5708, lng: -57.8739 },
-                { id: 'silves', nome: 'Silves', lat: -2.8389, lng: -58.2089 },
-                { id: 'tabatinga', nome: 'Tabatinga', lat: -4.2517, lng: -69.9378 },
-                { id: 'tapaua', nome: 'Tapauá', lat: -5.6208, lng: -63.1839 },
-                { id: 'tefe', nome: 'Tefé', lat: -3.3547, lng: -64.7108 },
-                { id: 'tonantins', nome: 'Tonantins', lat: -2.8739, lng: -67.8019 },
-                { id: 'uarini', nome: 'Uarini', lat: -2.9908, lng: -65.1081 },
-                { id: 'urucara', nome: 'Urucará', lat: -2.5369, lng: -57.7589 },
-                { id: 'urucurituba', nome: 'Urucurituba', lat: -3.1289, lng: -58.1558 }
-            ];
-
-            // Inicialização
-            function init() {
-                initMap();
-                setupEventListeners();
-                loadPointsFromStorage();
-                updateStats();
-                
-                // Mostrar seção da câmera apenas em mobile
-                if (isMobileDevice()) {
-                    elements.cameraSection.style.display = 'block';
-                    updateLiveCoords();
+            // Verificar se é mobile E se a seção da câmera existe
+            if (isMobileDevice()) {
+                const cameraSection = document.getElementById('camera-section');
+                if (cameraSection) {
+                    cameraSection.style.display = 'block';
                 }
             }
+        });
 
-            // Funções do Mapa
-            function initMap() {
-                map = L.map('map', {
-                    center: [currentLat, currentLng],
-                    zoom: 10,
-                    minZoom: 6,
-                    maxZoom: 18,
-                    maxBounds: [[-12, -75], [2, -50]]
+        function initMap() {
+            state.map = L.map('map', config);
+            
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri'
+            }).addTo(state.map);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(state.map);
+
+            state.map.on('click', function(e) {
+                updateCoordinates(e.latlng.lat, e.latlng.lng);
+                updateMarker(e.latlng.lat, e.latlng.lng);
+            });
+
+            updateCoordinates(config.center[0], config.center[1]);
+            populateMunicipios();
+        }
+
+        function setupEventListeners() {
+            // Botões principais
+            document.getElementById('add-point').addEventListener('click', addPoint);
+            document.getElementById('add-gps-point').addEventListener('click', addGpsPoint);
+            document.getElementById('clear-points').addEventListener('click', clearPoints);
+            document.getElementById('export-kml').addEventListener('click', exportKml);
+            document.getElementById('center-map').addEventListener('click', centerMap);
+            document.getElementById('locate-me').addEventListener('click', toggleGps);
+            document.getElementById('go-to-coords').addEventListener('click', goToManualCoords);
+            
+            // Câmera
+            document.getElementById('start-camera').addEventListener('click', startCamera);
+            document.getElementById('take-photo').addEventListener('click', takePhoto);
+            document.getElementById('use-photo').addEventListener('click', usePhoto);
+            document.getElementById('retake-photo').addEventListener('click', retakePhoto);
+            document.getElementById('close-camera').addEventListener('click', closeCamera);
+            
+            // Navegação
+            document.getElementById('zoom-in').addEventListener('click', () => state.map.zoomIn());
+            document.getElementById('zoom-out').addEventListener('click', () => state.map.zoomOut());
+            document.getElementById('municipio-select').addEventListener('change', changeMunicipio);
+            document.getElementById('search-location').addEventListener('keypress', searchLocation);
+            
+            // Tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
                 });
-                
-                const baseLayers = {
-                    "Satélite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                        attribution: '&copy; Esri', maxZoom: 18
-                    }),
-                    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap contributors', maxZoom: 18
-                    })
-                };
-                
-                baseLayers["Satélite"].addTo(map);
-                L.control.layers(baseLayers).addTo(map);
+            });
+        }
 
-                map.on('click', function(e) {
-                    updateCoordinates(e.latlng.lat, e.latlng.lng);
-                    if (currentMarker) map.removeLayer(currentMarker);
-                    currentMarker = L.marker([e.latlng.lat, e.latlng.lng], {
-                        icon: L.divIcon({ className: 'custom-marker marker-pulse', iconSize: [18, 18] })
-                    }).addTo(map);
-                });
+        // Funções do Mapa
+        function updateCoordinates(lat, lng) {
+            state.currentLat = lat;
+            state.currentLng = lng;
+            document.getElementById('current-coords').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            updateLiveCoords();
+        }
 
-                updateCoordinates(currentLat, currentLng);
-                populateMunicipiosDropdown();
+        function updateMarker(lat, lng) {
+            if (state.currentMarker) state.map.removeLayer(state.currentMarker);
+            state.currentMarker = L.marker([lat, lng]).addTo(state.map);
+        }
+
+        function populateMunicipios() {
+            const select = document.getElementById('municipio-select');
+            municipios.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.id;
+                option.textContent = m.nome;
+                select.appendChild(option);
+            });
+        }
+
+        function changeMunicipio() {
+            const municipio = municipios.find(m => m.id === document.getElementById('municipio-select').value);
+            if (municipio) {
+                state.map.setView([municipio.lat, municipio.lng], 10);
+                updateCoordinates(municipio.lat, municipio.lng);
             }
+        }
 
-            function setupEventListeners() {
-                elements.addPoint.addEventListener('click', addPoint);
-                elements.addGpsPoint.addEventListener('click', addGpsPoint);
-                elements.clearPoints.addEventListener('click', clearPoints);
-                elements.exportKml.addEventListener('click', exportKml);
-                elements.centerMap.addEventListener('click', centerMap);
-                elements.zoomIn.addEventListener('click', () => map.zoomIn());
-                elements.zoomOut.addEventListener('click', () => map.zoomOut());
-                elements.locateMe.addEventListener('click', toggleGps);
-                elements.municipioSelect.addEventListener('change', changeMunicipio);
-                elements.searchLocation.addEventListener('keypress', searchLocation);
-                elements.goToCoords.addEventListener('click', goToManualCoords);
-                
-                elements.tabButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const tabId = this.getAttribute('data-tab');
-                        elements.tabButtons.forEach(btn => btn.classList.remove('active'));
-                        this.classList.add('active');
-                        elements.tabContents.forEach(content => content.classList.remove('active'));
-                        document.getElementById(`${tabId}-tab`).classList.add('active');
-                    });
-                });
-
-                // Event listeners da câmera
-                elements.startCameraBtn.addEventListener('click', startCamera);
-                elements.takePhotoBtn.addEventListener('click', takePhoto);
-                elements.usePhotoBtn.addEventListener('click', usePhoto);
-                elements.retakePhotoBtn.addEventListener('click', retakePhoto);
-                elements.closeCameraBtn.addEventListener('click', closeCamera);
-            }
-
-            function populateMunicipiosDropdown() {
-                municipios.forEach(m => {
-                    const option = document.createElement('option');
-                    option.value = m.id;
-                    option.textContent = m.nome;
-                    elements.municipioSelect.appendChild(option);
-                });
-                elements.municipioSelect.value = 'manaus';
-            }
-
-            function changeMunicipio() {
-                const municipio = municipios.find(m => m.id === elements.municipioSelect.value);
+        function searchLocation(e) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('search-location').value.toLowerCase();
+                const municipio = municipios.find(m => m.nome.toLowerCase().includes(query));
                 if (municipio) {
-                    map.setView([municipio.lat, municipio.lng], 10);
+                    state.map.setView([municipio.lat, municipio.lng], 12);
                     updateCoordinates(municipio.lat, municipio.lng);
+                    document.getElementById('municipio-select').value = municipio.id;
                 }
             }
+        }
 
-            function searchLocation(e) {
-                if (e.key === 'Enter') {
-                    const query = elements.searchLocation.value.trim().toLowerCase();
-                    if (query) {
-                        const municipio = municipios.find(m => m.nome.toLowerCase().includes(query));
-                        if (municipio) {
-                            map.setView([municipio.lat, municipio.lng], 12);
-                            updateCoordinates(municipio.lat, municipio.lng);
-                            elements.municipioSelect.value = municipio.id;
-                            showNotification(`Localizado: ${municipio.nome}`, 'success');
-                        } else {
-                            showNotification('Município não encontrado', 'warning');
-                        }
-                    }
-                }
-            }
-
-            function goToManualCoords() {
-                const lat = parseFloat(elements.manualLat.value.replace(',', '.'));
-                const lng = parseFloat(elements.manualLng.value.replace(',', '.'));
-                
-                if (isNaN(lat) || isNaN(lng)) {
-                    showNotification('Coordenadas inválidas. Use formato decimal (ex: -3.1190, -60.0217)', 'warning');
-                    return;
-                }
-                
-                if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-                    showNotification('Coordenadas fora do intervalo válido', 'warning');
-                    return;
-                }
-                
-                map.setView([lat, lng], 15);
+        function goToManualCoords() {
+            const lat = parseFloat(document.getElementById('manual-lat').value);
+            const lng = parseFloat(document.getElementById('manual-lng').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                state.map.setView([lat, lng], 15);
                 updateCoordinates(lat, lng);
-                
-                if (currentMarker) map.removeLayer(currentMarker);
-                currentMarker = L.marker([lat, lng], {
-                    icon: L.divIcon({ className: 'custom-marker marker-pulse', iconSize: [18, 18] })
-                }).addTo(map);
-                
-                showNotification(`Navegando para: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+                updateMarker(lat, lng);
             }
+        }
 
-            // Funções do GPS
-            function toggleGps() {
-                if (isGpsActive) stopGps();
-                else startGps();
+        function centerMap() {
+            const municipio = municipios.find(m => m.id === document.getElementById('municipio-select').value);
+            if (municipio) {
+                state.map.setView([municipio.lat, municipio.lng], 10);
             }
+        }
 
-            function startGps() {
-                if (!navigator.geolocation) {
-                    showNotification('Geolocalização não suportada.', 'warning');
-                    return;
-                }
+        // Funções do GPS
+        function toggleGps() {
+            state.isGpsActive ? stopGps() : startGps();
+        }
 
-                showNotification('Ativando GPS...', 'info');
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        
-                        updateCoordinates(lat, lng);
-                        map.setView([lat, lng], 15);
-                        
-                        const gpsIcon = L.divIcon({
-                            className: 'gps-marker',
-                            html: `<div style="width:20px;height:20px;background:#2196f3;border:2px solid white;border-radius:50%;box-shadow:0 0 10px rgba(33,150,243,0.7);display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite;"><div style="width:6px;height:6px;background:white;border-radius:50%;"></div></div>`,
-                            iconSize: [20, 20], iconAnchor: [10, 10]
-                        });
-                        
-                        if (gpsMarker) map.removeLayer(gpsMarker);
-                        gpsMarker = L.marker([lat, lng], { icon: gpsIcon, zIndexOffset: 1000 }).addTo(map);
-                        
-                        if (gpsAccuracyCircle) map.removeLayer(gpsAccuracyCircle);
-                        gpsAccuracyCircle = L.circle([lat, lng], {
-                            color: '#2196f3', fillColor: '#2196f3', fillOpacity: 0.1,
-                            radius: position.coords.accuracy
-                        }).addTo(map);
-                        
-                        gpsMarker.bindPopup(`
-                            <div style="min-width:180px;">
-                                <h3 style="margin:0 0 5px 0;color:#0d47a1;font-size:0.9rem;">📍 Sua Localização</h3>
-                                <p style="margin:0;font-size:0.7rem;color:#666;">${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
-                            </div>
-                        `);
-                        
-                        elements.gpsAccuracy.textContent = Math.round(position.coords.accuracy);
-                        elements.gpsStatus.style.display = 'block';
-                        
-                        gpsWatchId = navigator.geolocation.watchPosition(
-                            updateGpsPosition, handleGpsError,
-                            { enableHighAccuracy: true, timeout: 5000, maximumAge: 1000 }
-                        );
-                        
-                        isGpsActive = true;
-                        elements.locateMe.classList.add('gps-active');
-                        showNotification('GPS ativado!', 'success');
-                    },
-                    handleGpsError,
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            }
-
-            function updateGpsPosition(position) {
+        function startGps() {
+            if (!navigator.geolocation) return;
+            
+            navigator.geolocation.getCurrentPosition((position) => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 
-                if (gpsMarker) {
-                    gpsMarker.setLatLng([lat, lng]);
-                    if (map.getZoom() > 14) map.panTo([lat, lng], { animate: true, duration: 1 });
-                }
-                
-                if (gpsAccuracyCircle) {
-                    gpsAccuracyCircle.setLatLng([lat, lng]);
-                    gpsAccuracyCircle.setRadius(position.coords.accuracy);
-                }
-                
                 updateCoordinates(lat, lng);
-                elements.gpsAccuracy.textContent = Math.round(position.coords.accuracy);
-            }
-
-            function handleGpsError(error) {
-                let message = 'Erro ao obter localização: ';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED: message += 'Permissão negada.'; break;
-                    case error.POSITION_UNAVAILABLE: message += 'Localização indisponível.'; break;
-                    case error.TIMEOUT: message += 'Tempo esgotado.'; break;
-                    default: message += 'Erro desconhecido.'; break;
-                }
-                showNotification(message, 'warning');
-                stopGps();
-            }
-
-            function stopGps() {
-                if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
-                if (gpsMarker) map.removeLayer(gpsMarker);
-                if (gpsAccuracyCircle) map.removeLayer(gpsAccuracyCircle);
-                elements.gpsStatus.style.display = 'none';
-                elements.locateMe.classList.remove('gps-active');
-                isGpsActive = false;
-                showNotification('GPS desativado.', 'info');
-            }
-
-            // Funções dos Pontos
-            function addPoint() {
-                const name = elements.pointName.value.trim() || `${getCategoryName(elements.pointCategory.value)} ${points.length + 1}`;
-                const description = elements.pointDesc.value.trim();
-                const category = elements.pointCategory.value;
-                const municipio = municipios.find(m => m.id === elements.municipioSelect.value);
-
-                const point = {
-                    id: Date.now(), name, description, category,
-                    lat: currentLat, lng: currentLng,
-                    timestamp: new Date().toISOString(),
-                    municipio: municipio ? municipio.nome : 'Desconhecido',
-                    source: 'manual'
-                };
-
-                if (currentPhotoData) {
-                    point.photo = currentPhotoData;
-                    point.hasGeophoto = true;
-                }
-
-                points.push(point);
-                renderPointsList();
-                addPointToMap(point);
-                savePointsToStorage();
-                updateStats();
-
-                elements.pointName.value = '';
-                elements.pointDesc.value = '';
-                showNotification(`"${name}" registrado!`, 'success');
-            }
-
-            function addGpsPoint() {
-                if (!isGpsActive) {
-                    showNotification('Ative o GPS primeiro!', 'warning');
-                    return;
-                }
-
-                const name = elements.pointName.value.trim() || `${getCategoryName(elements.pointCategory.value)} GPS ${points.length + 1}`;
-                const description = elements.pointDesc.value.trim() || 'Registrado via GPS em tempo real';
-                const municipio = municipios.find(m => m.id === elements.municipioSelect.value);
-
-                const point = {
-                    id: Date.now(), name, description,
-                    category: elements.pointCategory.value,
-                    lat: currentLat, lng: currentLng,
-                    timestamp: new Date().toISOString(),
-                    municipio: municipio ? municipio.nome : 'Desconhecido',
-                    source: 'gps', accuracy: elements.gpsAccuracy.textContent
-                };
-
-                if (currentPhotoData) {
-                    point.photo = currentPhotoData;
-                    point.hasGeophoto = true;
-                }
-
-                points.push(point);
-                renderPointsList();
-                addPointToMap(point);
-                savePointsToStorage();
-                updateStats();
-
-                elements.pointName.value = '';
-                elements.pointDesc.value = '';
-                showNotification(`"${name}" registrado via GPS!`, 'success');
-            }
-
-            function addPointToMap(point) {
-                const isGps = point.source === 'gps';
-                const iconColor = isGps ? '#2196f3' : '#4caf50';
+                state.map.setView([lat, lng], 15);
                 
-                const marker = L.marker([point.lat, point.lng], {
-                    icon: L.divIcon({
-                        className: 'point-marker',
-                        html: `<div style="background:${iconColor};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>`,
-                        iconSize: [12, 12], iconAnchor: [6, 6]
-                    })
-                }).addTo(map);
+                if (state.gpsMarker) state.map.removeLayer(state.gpsMarker);
+                state.gpsMarker = L.marker([lat, lng]).addTo(state.map);
                 
+                document.getElementById('gps-accuracy').textContent = Math.round(position.coords.accuracy);
+                document.getElementById('gps-status').style.display = 'block';
+                document.getElementById('locate-me').classList.add('gps-active');
+                state.isGpsActive = true;
+            });
+        }
+
+        function stopGps() {
+            if (state.gpsMarker) state.map.removeLayer(state.gpsMarker);
+            document.getElementById('gps-status').style.display = 'none';
+            document.getElementById('locate-me').classList.remove('gps-active');
+            state.isGpsActive = false;
+        }
+
+        // Funções dos Pontos
+        function addPoint() {
+            const name = document.getElementById('point-name').value || `Ponto ${state.points.length + 1}`;
+            const description = document.getElementById('point-desc').value;
+            const category = document.getElementById('point-category').value;
+            const municipio = municipios.find(m => m.id === document.getElementById('municipio-select').value);
+
+            const point = {
+                id: Date.now(), name, description, category,
+                lat: state.currentLat, lng: state.currentLng,
+                timestamp: new Date().toISOString(),
+                municipio: municipio ? municipio.nome : 'Desconhecido',
+                source: 'manual'
+            };
+
+            if (state.currentPhotoData) {
+                point.photo = state.currentPhotoData;
+                point.hasGeophoto = true;
+            }
+
+            state.points.push(point);
+            renderPointsList();
+            addPointToMap(point);
+            savePointsToStorage();
+            updateStats();
+
+            document.getElementById('point-name').value = '';
+            document.getElementById('point-desc').value = '';
+        }
+
+        function addGpsPoint() {
+            if (!state.isGpsActive) return;
+            
+            const name = document.getElementById('point-name').value || `GPS ${state.points.length + 1}`;
+            const point = {
+                id: Date.now(), name,
+                description: document.getElementById('point-desc').value || 'Registrado via GPS',
+                category: document.getElementById('point-category').value,
+                lat: state.currentLat, lng: state.currentLng,
+                timestamp: new Date().toISOString(),
+                municipio: municipios.find(m => m.id === document.getElementById('municipio-select').value)?.nome || 'Desconhecido',
+                source: 'gps'
+            };
+
+            if (state.currentPhotoData) {
+                point.photo = state.currentPhotoData;
+                point.hasGeophoto = true;
+            }
+
+            state.points.push(point);
+            renderPointsList();
+            addPointToMap(point);
+            savePointsToStorage();
+            updateStats();
+
+            document.getElementById('point-name').value = '';
+            document.getElementById('point-desc').value = '';
+        }
+
+        function addPointToMap(point) {
+            const marker = L.marker([point.lat, point.lng]).addTo(state.map);
+            
+            const popupContent = `
+                <div style="min-width:200px;">
+                    <h3>${point.name} ${point.hasGeophoto ? '📍' : ''}</h3>
+                    <p>${point.description}</p>
+                    <p><small>${getCategoryName(point.category)} - ${point.municipio}</small></p>
+                    <p><small>${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</small></p>
+                    ${point.photo ? `<img src="${point.photo}" style="max-width:100%;border-radius:5px;margin-top:5px;">` : ''}
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            point.marker = marker;
+        }
+
+        function renderPointsList() {
+            const container = document.getElementById('points-container');
+            const count = document.getElementById('points-count');
+            
+            count.textContent = state.points.length;
+            
+            if (state.points.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:10px;color:#aaa;">Nenhum ponto</p>';
+                return;
+            }
+
+            container.innerHTML = state.points.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(point => {
                 const date = new Date(point.timestamp);
-                const dateStr = date.toLocaleDateString('pt-BR');
-                const timeStr = date.toLocaleTimeString('pt-BR');
-                
-                // Popup com foto se disponível
-                const photoHtml = point.photo ? 
-                    `<div class="photo-popup">
-                        <img src="${point.photo}" alt="Foto do ponto" style="max-width:100%;border:2px solid #4caf50;border-radius:5px;">
-                        ${point.hasGeophoto ? '<p style="text-align:center;color:#4caf50;font-weight:bold;">📍 Foto Georreferenciada</p>' : ''}
-                        <p style="font-size:0.8rem;color:#666;text-align:center;">
-                            Coordenadas: ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}<br>
-                            Data: ${dateStr} ${timeStr}
-                        </p>
-                     </div>` : '';
-                
-                marker.bindPopup(`
-                    <div style="min-width:200px;">
-                        <h3 style="margin:0 0 5px 0;color:${iconColor};font-size:0.9rem;">
-                            ${point.name} 
-                            ${point.hasGeophoto ? '📍' : ''}
-                        </h3>
-                        <p style="margin:0 0 5px 0;font-size:0.8rem;">${point.description}</p>
-                        <p style="margin:0 0 3px 0;font-size:0.7rem;color:#666;">${getCategoryName(point.category)} - ${point.municipio}</p>
-                        ${isGps ? `<p style="margin:0 0 3px 0;font-size:0.7rem;color:#666;">Precisão: ${point.accuracy}m</p>` : ''}
-                        <p style="margin:0;font-size:0.7rem;color:#666;">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</p>
-                        ${photoHtml}
-                    </div>
-                `);
-
-                marker.on('mouseover', function() {
-                    elements.infoName.textContent = point.name;
-                    elements.infoCoords.textContent = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
-                    elements.infoDesc.textContent = point.description;
-                    elements.markerInfo.style.display = 'block';
-                });
-
-                marker.on('mouseout', function() {
-                    elements.markerInfo.style.display = 'none';
-                });
-
-                point.marker = marker;
-            }
-
-            function clearPoints() {
-                if (points.length === 0) {
-                    showNotification('Não há pontos para limpar.', 'warning');
-                    return;
-                }
-
-                if (confirm('Limpar todos os pontos registrados?')) {
-                    points.forEach(point => { if (point.marker) map.removeLayer(point.marker); });
-                    points = [];
-                    renderPointsList();
-                    savePointsToStorage();
-                    updateStats();
-                    showNotification('Todos os pontos removidos.', 'info');
-                }
-            }
-
-            function renderPointsList() {
-                elements.pointsCount.textContent = points.length;
-                
-                if (points.length === 0) {
-                    elements.pointsContainer.innerHTML = '<p style="text-align:center;padding:10px;color:#aaa;font-size:0.8rem;">Nenhum ponto registrado</p>';
-                    return;
-                }
-
-                const sortedPoints = [...points].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                elements.pointsContainer.innerHTML = sortedPoints.map(point => {
-                    const date = new Date(point.timestamp);
-                    const dateStr = date.toLocaleDateString('pt-BR');
-                    const timeStr = date.toLocaleTimeString('pt-BR');
-                    const isGps = point.source === 'gps';
-                    const hasPhoto = point.photo ? 'point-has-photo' : '';
-                    const hasGeophoto = point.hasGeophoto ? 'point-has-geophoto' : '';
-                    
-                    return `
-                    <div class="point-item ${hasPhoto} ${hasGeophoto}">
-                        <div class="point-info">
-                            <div class="point-name">${point.name}</div>
-                            <div class="point-details">
-                                ${getCategoryName(point.category)} • ${point.municipio}<br>
-                                ${dateStr} ${timeStr} ${isGps ? '• 📍 GPS' : ''}<br>
-                                ${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}
-                            </div>
-                        </div>
-                        <div class="point-actions">
-                            <button class="view-point" data-id="${point.id}" title="Visualizar">👁️</button>
-                            ${point.photo ? `<button class="view-photo" data-id="${point.id}" title="Ver Foto">📸</button>` : ''}
-                            <button class="delete-point" data-id="${point.id}" title="Excluir">🗑️</button>
+                return `
+                <div class="point-item ${point.photo ? 'point-has-photo' : ''}">
+                    <div class="point-info">
+                        <div class="point-name">${point.name}</div>
+                        <div class="point-details">
+                            ${getCategoryName(point.category)} • ${point.municipio}<br>
+                            ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}
                         </div>
                     </div>
-                    `;
-                }).join('');
+                    <div class="point-actions">
+                        <button class="view-point" data-id="${point.id}">👁️</button>
+                        ${point.photo ? `<button class="view-photo" data-id="${point.id}">📸</button>` : ''}
+                        <button class="delete-point" data-id="${point.id}">🗑️</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
 
-                document.querySelectorAll('.view-point').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const point = points.find(p => p.id === parseInt(this.dataset.id));
-                        if (point) {
-                            map.setView([point.lat, point.lng], 15);
-                            if (point.marker) point.marker.openPopup();
-                        }
-                    });
+            // Event listeners para os botões dos pontos
+            container.querySelectorAll('.view-point').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const point = state.points.find(p => p.id === parseInt(btn.dataset.id));
+                    if (point) state.map.setView([point.lat, point.lng], 15);
                 });
+            });
 
-                document.querySelectorAll('.view-photo').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const point = points.find(p => p.id === parseInt(this.dataset.id));
-                        if (point && point.photo) {
-                            const newWindow = window.open();
-                            newWindow.document.write(`
-                                <html>
-                                    <head><title>Foto - ${point.name}</title></head>
-                                    <body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;">
-                                        <img src="${point.photo}" style="max-width:100%;max-height:100%;" alt="Foto do ponto">
-                                    </body>
-                                </html>
-                            `);
-                        }
-                    });
+            container.querySelectorAll('.delete-point').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const point = state.points.find(p => p.id === parseInt(btn.dataset.id));
+                    if (point && confirm(`Excluir "${point.name}"?`)) {
+                        if (point.marker) state.map.removeLayer(point.marker);
+                        state.points = state.points.filter(p => p.id !== point.id);
+                        renderPointsList();
+                        savePointsToStorage();
+                        updateStats();
+                    }
                 });
+            });
+        }
 
-                document.querySelectorAll('.delete-point').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const point = points.find(p => p.id === parseInt(this.dataset.id));
-                        if (point && confirm(`Excluir "${point.name}"?`)) {
-                            if (point.marker) map.removeLayer(point.marker);
-                            points = points.filter(p => p.id !== point.id);
-                            renderPointsList();
-                            savePointsToStorage();
-                            updateStats();
-                            showNotification(`"${point.name}" excluído.`, 'info');
-                        }
-                    });
-                });
-            }
+        function clearPoints() {
+            if (state.points.length === 0 || !confirm('Limpar todos os pontos?')) return;
+            state.points.forEach(point => { if (point.marker) state.map.removeLayer(point.marker); });
+            state.points = [];
+            renderPointsList();
+            savePointsToStorage();
+            updateStats();
+        }
 
-            function updateCoordinates(lat, lng) {
-                currentLat = lat;
-                currentLng = lng;
-                elements.currentCoords.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                updateLiveCoords();
-            }
+        function getCategoryName(category) {
+            const categories = {
+                'ponte-oae': 'Ponte - OAE', 'bueiro-oae': 'Bueiro - OAE', 
+                'galeria-oae': 'Galeria - OAE', 'viario-urbano': 'Viário - Urbano',
+                'jazida': 'Jazida', 'ramal': 'Ramal', 'rodovia': 'Rodovia',
+                'patologias-pista': 'Patologias', 'viaduto-oae': 'Viaduto - OAE'
+            };
+            return categories[category] || 'Desconhecida';
+        }
 
-            function getCategoryName(category) {
-                const categories = {
-                    'ponte-oae': 'Ponte - OAE', 'bueiro-oae': 'Bueiro - OAE', 
-                    'galeria-oae': 'Galeria - OAE', 'viario-urbano': 'Viário - Urbano',
-                    'jazida': 'Jazida', 'ramal': 'Ramal', 'rodovia': 'Rodovia',
-                    'patologias-pista': 'Patologias na Pista', 'viaduto-oae': 'Viaduto - OAE'
-                };
-                return categories[category] || 'Desconhecida';
-            }
+        function updateStats() {
+            document.getElementById('total-points').textContent = state.points.length;
+            document.getElementById('categories-count').textContent = 
+                state.points.length > 0 ? new Set(state.points.map(p => p.category)).size : '0';
+        }
 
-            function updateStats() {
-                elements.totalPoints.textContent = points.length;
-                elements.categoriesCount.textContent = points.length > 0 ? new Set(points.map(p => p.category)).size : '0';
-            }
-
-            function centerMap() {
-                const municipio = municipios.find(m => m.id === elements.municipioSelect.value);
-                if (municipio) {
-                    map.setView([municipio.lat, municipio.lng], 10);
-                    updateCoordinates(municipio.lat, municipio.lng);
-                }
-            }
-
-            function exportKml() {
-                if (points.length === 0) {
-                    showNotification('Não há pontos para exportar.', 'warning');
-                    return;
-                }
-
-                try {
-                    let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+        function exportKml() {
+            if (state.points.length === 0) return;
+            
+            let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-<Document>
-    <name>GeoMarker - DMOB</name>
-    <description>Pontos registrados no GeoMarker - DMOB</description>
-    <Style id="yellowStyle">
-        <IconStyle><color>ff00ffff</color><scale>1.2</scale><Icon><href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href></Icon></IconStyle>
-    </Style>`;
+<Document><name>GeoMarker - DMOB</name>`;
 
-                    points.forEach(point => {
-                        const date = new Date(point.timestamp);
-                        const metadata = `
-<b>METADADOS:</b><br/>
-<table border="1" style="border-collapse:collapse;width:100%;">
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Identificação:</b></td><td style="padding:5px;">${point.name}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Categoria:</b></td><td style="padding:5px;">${getCategoryName(point.category)}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Município:</b></td><td style="padding:5px;">${point.municipio}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Descrição:</b></td><td style="padding:5px;">${point.description || 'Não informada'}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Fonte:</b></td><td style="padding:5px;">${point.source === 'gps' ? 'GPS' : 'Manual'}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Data:</b></td><td style="padding:5px;">${date.toLocaleDateString('pt-BR')}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Hora:</b></td><td style="padding:5px;">${date.toLocaleTimeString('pt-BR')}</td></tr>
-  <tr><td style="padding:5px;background:#f0f0f0;"><b>Coordenadas:</b></td><td style="padding:5px;">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</td></tr>
-  ${point.accuracy ? `<tr><td style="padding:5px;background:#f0f0f0;"><b>Precisão:</b></td><td style="padding:5px;">${point.accuracy}m</td></tr>` : ''}
-  ${point.photo ? `<tr><td style="padding:5px;background:#f0f0f0;"><b>Foto:</b></td><td style="padding:5px;">Sim (georreferenciada)</td></tr>` : ''}
-</table>
-<br/><b>SISTEMA:</b> GeoMarker - DMOB`;
-
-                        kmlContent += `
+            state.points.forEach(point => {
+                kmlContent += `
     <Placemark>
-        <name>${escapeXml(point.name)}</name>
-        <description><![CDATA[${metadata}]]></description>
-        <styleUrl>#yellowStyle</styleUrl>
+        <name>${point.name}</name>
         <Point><coordinates>${point.lng},${point.lat},0</coordinates></Point>
     </Placemark>`;
-                    });
+            });
 
-                    kmlContent += `\n</Document>\n</kml>`;
+            kmlContent += `\n</Document>\n</kml>`;
 
-                    const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `geomarker_${new Date().toISOString().split('T')[0]}.kml`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    showNotification(`KML com ${points.length} pontos exportado!`, 'success');
-                } catch (error) {
-                    showNotification(`Erro ao exportar: ${error.message}`, 'error');
-                }
+            const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `geomarker_${new Date().toISOString().split('T')[0]}.kml`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Funções da Câmera - CORRIGIDAS
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function updateLiveCoords() {
+            const coords = document.getElementById('live-coords');
+            if (state.currentLat && state.currentLng && coords) {
+                coords.textContent = `${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`;
             }
+        }
 
-            function escapeXml(unsafe) {
-                return unsafe.replace(/[<>&'"]/g, c => {
-                    switch(c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case '\'': return '&apos;'; case '"': return '&quot;'; }
+        async function startCamera() {
+            try {
+                // Mostrar estado de carregamento
+                const cameraLoading = document.getElementById('camera-loading');
+                const cameraError = document.getElementById('camera-error');
+                
+                if (cameraLoading) cameraLoading.style.display = 'block';
+                if (cameraError) cameraError.style.display = 'none';
+                
+                state.stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }, 
+                    audio: false 
                 });
-            }
-
-            function showNotification(message, type) {
-                const notification = document.createElement('div');
-                notification.textContent = message;
-                notification.style.cssText = `
-                    position:fixed;top:20px;right:20px;padding:12px 16px;border-radius:5px;color:white;font-weight:600;z-index:10000;max-width:300px;font-size:0.8rem;box-shadow:0 5px 15px rgba(0,0,0,0.3);transition:all 0.3s ease;
-                    background:${type === 'success' ? 'linear-gradient(135deg,#4caf50,#8bc34a)' : type === 'warning' ? 'linear-gradient(135deg,#ff9800,#ff5722)' : 'linear-gradient(135deg,#2196f3,#3f51b5)'};
-                `;
                 
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.style.opacity = '0';
-                    notification.style.transform = 'translateX(100px)';
-                    setTimeout(() => document.body.removeChild(notification), 300);
-                }, 3000);
-            }
-
-            function savePointsToStorage() {
-                localStorage.setItem('geomarkerPoints', JSON.stringify({ points, timestamp: new Date().toISOString() }));
-            }
-
-            function loadPointsFromStorage() {
-                const savedData = localStorage.getItem('geomarkerPoints');
-                if (savedData) {
-                    try {
-                        const data = JSON.parse(savedData);
-                        if (data.points && Array.isArray(data.points)) {
-                            points = data.points;
-                            points.forEach(point => addPointToMap(point));
-                            renderPointsList();
-                        }
-                    } catch (e) {
-                        console.error('Erro ao carregar pontos:', e);
-                    }
-                }
-            }
-
-            // Funções da Câmera
-            function isMobileDevice() {
-                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            }
-
-            function updateLiveCoords() {
-                if (currentLat && currentLng) {
-                    const lat = currentLat.toFixed(6);
-                    const lng = currentLng.toFixed(6);
-                    elements.liveCoords.textContent = `${lat}, ${lng}`;
+                const video = document.getElementById('video');
+                const cameraPreview = document.getElementById('camera-preview');
+                const coordsOverlay = document.getElementById('coords-overlay');
+                const takePhotoButton = document.getElementById('take-photo');
+                const closeCameraButton = document.getElementById('close-camera');
+                
+                // Verificar se elementos existem antes de manipular
+                if (video && cameraPreview && coordsOverlay && takePhotoButton && closeCameraButton) {
+                    video.srcObject = state.stream;
+                    cameraPreview.style.display = 'block';
+                    coordsOverlay.style.display = 'block';
+                    takePhotoButton.disabled = false;
+                    closeCameraButton.disabled = false;
+                    updateLiveCoords();
+                    
+                    // Esconder loading
+                    if (cameraLoading) cameraLoading.style.display = 'none';
                 } else {
-                    elements.liveCoords.textContent = '--,--';
+                    console.error('Elementos da câmera não encontrados');
+                    if (cameraError) {
+                        cameraError.textContent = 'Elementos da câmera não encontrados';
+                        cameraError.style.display = 'block';
+                    }
+                    if (cameraLoading) cameraLoading.style.display = 'none';
                 }
+            } catch (error) {
+                console.error('Erro ao acessar câmera:', error);
+                
+                const cameraError = document.getElementById('camera-error');
+                const cameraLoading = document.getElementById('camera-loading');
+                
+                if (cameraError) {
+                    cameraError.textContent = `Erro ao acessar câmera: ${error.message}`;
+                    cameraError.style.display = 'block';
+                }
+                if (cameraLoading) cameraLoading.style.display = 'none';
+                
+                alert('Não foi possível acessar a câmera. Verifique as permissões.');
             }
+        }
 
-            async function startCamera() {
+        function takePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const cameraPreview = document.getElementById('camera-preview');
+            const photoResult = document.getElementById('photo-result');
+            const photoPreview = document.getElementById('photo-preview');
+            
+            // Verificar se elementos existem
+            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview) {
+                console.error('Elementos da foto não encontrados');
+                return;
+            }
+            
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Adicionar coordenadas
+            context.font = 'bold 20px Arial';
+            context.fillStyle = 'white';
+            context.strokeStyle = 'black';
+            context.lineWidth = 3;
+            context.strokeText(`📍 ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, 20, 40);
+            context.fillText(`📍 ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, 20, 40);
+            
+            state.currentPhotoData = canvas.toDataURL('image/jpeg');
+            photoPreview.src = state.currentPhotoData;
+            photoResult.style.display = 'block';
+            cameraPreview.style.display = 'none';
+        }
+
+        function usePhoto() {
+            if (!state.currentPhotoData) return;
+            
+            const now = new Date();
+            document.getElementById('point-name').value = `Foto_${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
+            document.getElementById('point-desc').value = 
+                `Foto georreferenciada\nCoordenadas: ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`;
+            
+            closeCamera();
+        }
+
+        function retakePhoto() {
+            const photoResult = document.getElementById('photo-result');
+            const cameraPreview = document.getElementById('camera-preview');
+            
+            if (photoResult) photoResult.style.display = 'none';
+            if (cameraPreview) cameraPreview.style.display = 'block';
+            state.currentPhotoData = null;
+        }
+
+        function closeCamera() {
+            if (state.stream) {
+                state.stream.getTracks().forEach(track => track.stop());
+                state.stream = null;
+            }
+            
+            const cameraPreview = document.getElementById('camera-preview');
+            const photoResult = document.getElementById('photo-result');
+            const takePhotoButton = document.getElementById('take-photo');
+            const closeCameraButton = document.getElementById('close-camera');
+            const cameraLoading = document.getElementById('camera-loading');
+            const cameraError = document.getElementById('camera-error');
+            
+            if (cameraPreview) cameraPreview.style.display = 'none';
+            if (photoResult) photoResult.style.display = 'none';
+            if (takePhotoButton) takePhotoButton.disabled = true;
+            if (closeCameraButton) closeCameraButton.disabled = true;
+            if (cameraLoading) cameraLoading.style.display = 'none';
+            if (cameraError) cameraError.style.display = 'none';
+            
+            state.currentPhotoData = null;
+        }
+
+        // Armazenamento
+        function savePointsToStorage() {
+            localStorage.setItem('geomarkerPoints', JSON.stringify(state.points));
+        }
+
+        function loadPointsFromStorage() {
+            const saved = localStorage.getItem('geomarkerPoints');
+            if (saved) {
                 try {
-                    showNotification('Acessando câmera...', 'info');
-                    
-                    stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: 'environment',
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 }
-                        }, 
-                        audio: false 
-                    });
-                    
-                    elements.video.srcObject = stream;
-                    elements.cameraPreview.style.display = 'block';
-                    elements.takePhotoBtn.style.display = 'inline-block';
-                    elements.closeCameraBtn.style.display = 'inline-block';
-                    elements.startCameraBtn.style.display = 'none';
-                    
-                    elements.coordsOverlay.style.display = 'block';
-                    coordsUpdateInterval = setInterval(updateLiveCoords, 1000);
-                    
-                    showNotification('Câmera pronta! As coordenadas aparecerão na foto.', 'success');
-                } catch (error) {
-                    console.error('Erro ao acessar câmera:', error);
-                    showNotification('Erro ao acessar câmera: ' + error.message, 'error');
+                    state.points = JSON.parse(saved);
+                    state.points.forEach(point => addPointToMap(point));
+                    renderPointsList();
+                } catch (e) {
+                    console.error('Erro ao carregar pontos:', e);
                 }
             }
-
-            function takePhoto() {
-                const context = elements.canvas.getContext('2d');
-                elements.canvas.width = elements.video.videoWidth;
-                elements.canvas.height = elements.video.videoHeight;
-                
-                context.drawImage(elements.video, 0, 0, elements.canvas.width, elements.canvas.height);
-                addCoordinatesWatermark(context, elements.canvas.width, elements.canvas.height);
-                
-                currentPhotoData = elements.canvas.toDataURL('image/jpeg', 0.8);
-                elements.photoPreview.src = currentPhotoData;
-                elements.photoPreview.classList.add('photo-with-coords');
-                
-                elements.photoResult.style.display = 'block';
-                elements.cameraPreview.style.display = 'none';
-                elements.takePhotoBtn.style.display = 'none';
-                elements.coordsOverlay.style.display = 'none';
-                
-                showNotification('Foto com coordenadas capturada!', 'success');
-            }
-
-            function addCoordinatesWatermark(context, width, height) {
-                const coordsText = `📍 ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
-                const timestamp = new Date().toLocaleString('pt-BR');
-                const municipio = municipios.find(m => m.id === elements.municipioSelect.value)?.nome || 'Desconhecido';
-                
-                context.font = 'bold 24px Arial';
-                context.textAlign = 'right';
-                context.textBaseline = 'top';
-                
-                const textMetrics = context.measureText(coordsText);
-                const textWidth = textMetrics.width;
-                const padding = 15;
-                
-                // Coordenadas (canto superior direito)
-                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                context.fillRect(width - textWidth - padding * 2, 10, textWidth + padding * 2, 35);
-                context.fillStyle = '#4caf50';
-                context.fillText(coordsText, width - padding, 15);
-                
-                // Data/hora (canto inferior esquerdo)
-                context.font = 'bold 18px Arial';
-                context.textAlign = 'left';
-                const timeMetrics = context.measureText(timestamp);
-                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                context.fillRect(10, height - 55, timeMetrics.width + padding * 2, 45);
-                context.fillStyle = 'white';
-                context.fillText(timestamp, 15, height - 50);
-                
-                // Município (canto inferior direito)
-                context.textAlign = 'right';
-                const municipioMetrics = context.measureText(municipio);
-                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                context.fillRect(width - municipioMetrics.width - padding * 2, height - 55, municipioMetrics.width + padding * 2, 45);
-                context.fillStyle = '#2196f3';
-                context.fillText(municipio, width - padding, height - 50);
-                
-                // Borda de identificação
-                context.strokeStyle = '#4caf50';
-                context.lineWidth = 4;
-                context.strokeRect(2, 2, width - 4, height - 4);
-            }
-
-            function usePhoto() {
-                if (!currentPhotoData) {
-                    showNotification('Nenhuma foto capturada!', 'warning');
-                    return;
-                }
-
-                const now = new Date();
-                const pointName = `Foto_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
-                
-                elements.pointName.value = pointName;
-                elements.pointDesc.value = `📸 Foto georreferenciada\n📍 Coordenadas: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}\n📅 Data: ${now.toLocaleString('pt-BR')}\n🏙️ Município: ${municipios.find(m => m.id === elements.municipioSelect.value)?.nome || 'Desconhecido'}`;
-                elements.pointCategory.value = 'patologias-pista';
-                
-                showNotification('Foto georreferenciada carregada! Preencha os dados e registre o ponto.', 'success');
-                closeCamera();
-            }
-
-            function retakePhoto() {
-                elements.photoResult.style.display = 'none';
-                elements.cameraPreview.style.display = 'block';
-                elements.takePhotoBtn.style.display = 'inline-block';
-                elements.coordsOverlay.style.display = 'block';
-                currentPhotoData = null;
-                elements.photoPreview.classList.remove('photo-with-coords');
-            }
-
-            function closeCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    stream = null;
-                }
-                
-                if (coordsUpdateInterval) {
-                    clearInterval(coordsUpdateInterval);
-                    coordsUpdateInterval = null;
-                }
-                
-                elements.video.srcObject = null;
-                elements.cameraPreview.style.display = 'none';
-                elements.photoResult.style.display = 'none';
-                elements.takePhotoBtn.style.display = 'none';
-                elements.closeCameraBtn.style.display = 'none';
-                elements.coordsOverlay.style.display = 'none';
-                elements.startCameraBtn.style.display = 'inline-block';
-                currentPhotoData = null;
-                elements.photoPreview.classList.remove('photo-with-coords');
-            }
-
-            // Inicializar aplicação
-            init();
-        });
+        }
     </script>
 </body>
 </html>
