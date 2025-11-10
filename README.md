@@ -2,10 +2,15 @@
 
 Sistema de marcação geográfica para obras de arte especiais e infraestrutura rodoviária no estado do Amazonas.
 
+## 🌐 Acesse Online
+
+**👉 [Clique aqui para usar o GeoMarker DMOB](https://SEU-USUARIO.github.io/GeoMarker-DMOB/)**
+
 ## 🚀 Funcionalidades
 
 - **Mapa Interativo**: Visualização com camadas de satélite e OpenStreetMap
 - **Registro de Pontos**: Manual e via GPS em tempo real
+- **Câmera Mobile**: Captura de fotos com coordenadas sobrepostas automaticamente
 - **Categorização**: 9 categorias especializadas (Ponte, Bueiro, Galeria, etc.)
 - **Busca Inteligente**: Todos os 62 municípios do Amazonas
 - **Exportação KML**: Compatível com Google Earth, QGIS e outros sistemas GIS
@@ -14,38 +19,21 @@ Sistema de marcação geográfica para obras de arte especiais e infraestrutura 
 
 ## 📋 Como Usar
 
-1. **Definir Localização**
-   - Clique no mapa OU
-   - Use coordenadas manuais OU  
-   - Selecione município na lista
-
-2. **Ativar GPS** (Opcional)
-   - Clique no botão "📍" para ativar GPS
-   - Use "🎯 Registrar com GPS" para pontos em tempo real
-
-3. **Preencher Dados**
-   - Identificação (nome)
-   - Categoria (seleção)
-   - Descrição/observações
-
-4. **Registrar Ponto**
-   - "📍 Registrar Ponto" para modo manual
-   - "🎯 Registrar com GPS" para modo GPS ativo
-
-5. **Gerenciar Pontos**
-   - Aba "Pontos" para ver lista completa
-   - Visualizar no mapa (👁️)
-   - Excluir pontos (🗑️)
-
-6. **Exportar Dados**
-   - "📤 Exportar KML" para gerar arquivo
+1. **Acesse** [a página online](https://SEU-USUARIO.github.io/GeoMarker-DMOB/)
+2. **Defina localização** clicando no mapa ou usando coordenadas
+3. **Ative GPS** para maior precisão (opcional)
+4. **Use a câmera** para fotos georreferenciadas (apenas mobile)
+5. **Preencha dados** do ponto (identificação, categoria, descrição)
+6. **Registre pontos** manualmente ou com GPS ativo
+7. **Exporte** dados em formato KML quando necessário
 
 ## 🛠️ Tecnologias
 
 - **Frontend**: HTML5, CSS3, JavaScript ES6+
 - **Mapas**: Leaflet.js
-- **Ícones**: Emojis nativos
 - **Armazenamento**: LocalStorage
 - **GPS**: Geolocation API
+- **Câmera**: MediaDevices API
+- **Hospedagem**: GitHub Pages
 
 ## 📁 Estrutura do Projeto
