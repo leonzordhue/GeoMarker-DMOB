@@ -4,7 +4,7 @@ Sistema de marcação geográfica para obras de arte especiais e infraestrutura 
 
 ## 🌐 Acesse Online
 
-**👉 [Clique aqui para usar o GeoMarker DMOB](https://SEU-USUARIO.github.io/GeoMarker-DMOB/)**
+**👉 [Clique aqui para usar o GeoMarker DMOB](https://leonzordhue.github.io/GeoMarker-DMOB/)**
 
 ## 🚀 Funcionalidades
 
@@ -19,7 +19,7 @@ Sistema de marcação geográfica para obras de arte especiais e infraestrutura 
 
 ## 📋 Como Usar
 
-1. **Acesse** [a página online](https://SEU-USUARIO.github.io/GeoMarker-DMOB/)
+1. **Acesse** [https://leonzordhue.github.io/GeoMarker-DMOB/)
 2. **Defina localização** clicando no mapa ou usando coordenadas
 3. **Ative GPS** para maior precisão (opcional)
 4. **Use a câmera** para fotos georreferenciadas (apenas mobile)
