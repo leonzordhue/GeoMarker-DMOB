@@ -5,7 +5,477 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeoMarker - DMOB</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background: linear-gradient(135deg, #1a5c2f, #2d7d46); 
+            color: white; 
+            min-height: 100vh; 
+            padding: 15px;
+        }
+        
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            background: rgba(0, 0, 0, 0.85); 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            height: calc(100vh - 30px); 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        header { 
+            padding: 20px; 
+            background: rgba(0, 0, 0, 0.7); 
+            border-bottom: 2px solid rgba(76, 175, 80, 0.3); 
+            text-align: center;
+        }
+        
+        h1 { 
+            font-size: 2.2rem; 
+            margin-bottom: 8px; 
+            background: linear-gradient(to right, #4caf50, #8bc34a); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            color: #ccc;
+            font-size: 1rem;
+        }
+        
+        .app-content { 
+            display: flex; 
+            flex: 1; 
+            overflow: hidden; 
+            gap: 15px;
+            padding: 15px;
+        }
+        
+        .map-section { 
+            flex: 2; 
+            min-width: 300px; 
+            display: flex; 
+            flex-direction: column;
+        }
+        
+        .map-container { 
+            flex: 1; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            background: #222; 
+            position: relative; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        #map { 
+            width: 100%; 
+            height: 100%; 
+        }
+        
+        .controls-section { 
+            flex: 1; 
+            min-width: 350px; 
+            display: flex; 
+            flex-direction: column; 
+            background: rgba(0, 0, 0, 0.6); 
+            border-radius: 10px;
+            padding: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            margin-bottom: 15px; 
+        }
+        
+        .control-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .control-group.full-width { 
+            grid-column: 1 / -1; 
+        }
+        
+        label { 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            color: #8bc34a; 
+            font-size: 0.95rem; 
+        }
+        
+        input, textarea, select { 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+            background: rgba(255, 255, 255, 0.1); 
+            color: white; 
+            font-size: 0.95rem; 
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus { 
+            outline: none; 
+            border-color: #4caf50; 
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+        }
+        
+        .buttons { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        
+        button { 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            background: linear-gradient(135deg, #4caf50, #2d7d46); 
+            color: white; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+        }
+        
+        button.secondary { 
+            background: linear-gradient(135deg, #1a5c2f, #4caf50); 
+        }
+        
+        button.gps { 
+            background: linear-gradient(135deg, #2196f3, #0d47a1); 
+        }
+        
+        button.gps-active { 
+            background: linear-gradient(135deg, #4caf50, #2d7d46); 
+            animation: pulse 2s infinite; 
+        }
+        
+        button:disabled { 
+            background: #666; 
+            cursor: not-allowed; 
+            opacity: 0.6; 
+            transform: none;
+        }
+        
+        @keyframes pulse { 
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); } 
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } 
+        }
+        
+        .points-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            background: rgba(0, 0, 0, 0.3); 
+            border-radius: 8px; 
+            padding: 10px; 
+            margin-top: 15px; 
+        }
+        
+        .point-item { 
+            padding: 12px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        
+        .point-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .point-info { 
+            flex: 1; 
+        }
+        
+        .point-name { 
+            font-weight: 600; 
+            font-size: 1rem; 
+            margin-bottom: 4px;
+        }
+        
+        .point-details { 
+            font-size: 0.8rem; 
+            color: #aaa; 
+        }
+        
+        .point-actions { 
+            display: flex; 
+            gap: 5px; 
+        }
+        
+        .point-actions button { 
+            padding: 6px 10px; 
+            font-size: 0.8rem; 
+        }
+        
+        .location-search { 
+            position: absolute; 
+            top: 15px; 
+            left: 15px; 
+            z-index: 1000; 
+            width: 280px; 
+        }
+        
+        .location-search input { 
+            width: 100%; 
+            padding: 10px 15px; 
+            border-radius: 25px; 
+            border: none; 
+            background: rgba(0, 0, 0, 0.8); 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .map-controls { 
+            position: absolute; 
+            top: 15px; 
+            right: 15px; 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        
+        .map-controls button { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.2rem;
+        }
+        
+        .gps-status { 
+            position: absolute; 
+            bottom: 15px; 
+            right: 15px; 
+            background: rgba(0, 0, 0, 0.8); 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            z-index: 1000; 
+            font-size: 0.8rem; 
+            display: none; 
+            border-left: 3px solid #4caf50;
+        }
+        
+        .manual-coords { 
+            background: rgba(0, 0, 0, 0.3); 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+        }
+        
+        .coord-inputs { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 8px;
+        }
+        
+        .coord-inputs input {
+            flex: 1;
+        }
+        
+        .tab-buttons { 
+            display: flex; 
+            margin-bottom: 15px; 
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .tab-button { 
+            flex: 1; 
+            padding: 12px; 
+            text-align: center; 
+            background: rgba(0, 0, 0, 0.3); 
+            cursor: pointer; 
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab-button.active { 
+            background: rgba(76, 175, 80, 0.5); 
+        }
+        
+        .tab-content { 
+            display: none; 
+            flex: 1; 
+            overflow-y: auto; 
+        }
+        
+        .tab-content.active { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .stats { 
+            display: flex; 
+            justify-content: space-around; 
+            margin-top: 15px; 
+            padding: 12px; 
+            background: rgba(0, 0, 0, 0.3); 
+            border-radius: 8px; 
+        }
+        
+        .stat-item { 
+            text-align: center; 
+        }
+        
+        .stat-value { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #8bc34a; 
+        }
+        
+        .stat-label { 
+            font-size: 0.8rem; 
+            color: #aaa; 
+        }
+        
+        /* Câmera */
+        .camera-section { 
+            background: rgba(0, 0, 0, 0.3); 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            display: none;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .camera-controls { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        
+        .camera-preview { 
+            position: relative; 
+            width: 100%; 
+            background: #000; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            margin-bottom: 15px; 
+            display: none; 
+        }
+        
+        .camera-preview video { 
+            width: 100%; 
+            height: auto; 
+            max-height: 300px; 
+            object-fit: cover; 
+            display: block;
+        }
+        
+        .photo-result { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            display: none; 
+        }
+        
+        #photo-preview { 
+            max-width: 100%; 
+            max-height: 300px; 
+            border-radius: 8px; 
+            border: 2px solid #4caf50; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .photo-actions { 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+            margin-top: 15px; 
+        }
+        
+        .coords-overlay { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            background: rgba(0, 0, 0, 0.8); 
+            color: white; 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px; 
+            font-weight: bold; 
+            z-index: 1000; 
+            border: 2px solid #4caf50; 
+            display: none; 
+        }
+        
+        .camera-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50px;
+            color: #8bc34a;
+            font-weight: bold;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+        }
+        
+        .camera-error {
+            background: rgba(255, 68, 68, 0.8);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .point-has-photo::after { 
+            content: " 📸"; 
+            font-size: 0.8em; 
+        }
+        
+        @media (max-width: 768px) { 
+            .app-content { 
+                flex-direction: column; 
+            } 
+            
+            .map-section { 
+                min-height: 400px; 
+            } 
+            
+            .location-search { 
+                width: calc(100% - 30px); 
+            } 
+            
+            .coord-inputs, .controls-grid { 
+                flex-direction: column; 
+            }
+            
+            .controls-section {
+                min-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -52,16 +522,16 @@
                         <div class="coord-inputs">
                             <input type="text" id="manual-lat" placeholder="Latitude">
                             <input type="text" id="manual-lng" placeholder="Longitude">
-                            <button id="go-to-coords" class="secondary">🌍</button>
+                            <button id="go-to-coords" class="secondary">🌍 Ir para</button>
                         </div>
                     </div>
 
                     <!-- Câmera Mobile -->
                     <div class="camera-section" id="camera-section">
                         <div class="camera-controls">
-                            <button id="start-camera" class="gps">📷 Câmera</button>
-                            <button id="take-photo" class="secondary" disabled>🎯 Foto</button>
-                            <button id="close-camera" class="secondary" disabled>❌</button>
+                            <button id="start-camera" class="gps">📷 Iniciar Câmera</button>
+                            <button id="take-photo" class="secondary" disabled>🎯 Capturar Foto</button>
+                            <button id="close-camera" class="secondary" disabled>❌ Fechar Câmera</button>
                         </div>
                         
                         <!-- Estados da câmera -->
@@ -80,8 +550,8 @@
                         <div class="photo-result" id="photo-result">
                             <img id="photo-preview" src="" alt="Preview">
                             <div class="photo-actions">
-                                <button id="use-photo" class="gps">✅ Usar</button>
-                                <button id="retake-photo" class="secondary">🔄 Nova</button>
+                                <button id="use-photo" class="gps">✅ Usar Foto</button>
+                                <button id="retake-photo" class="secondary">🔄 Nova Foto</button>
                             </div>
                         </div>
                     </div>
@@ -110,7 +580,7 @@
                         
                         <div class="control-group full-width">
                             <label>Descrição:</label>
-                            <textarea id="point-desc" rows="2" placeholder="Observações"></textarea>
+                            <textarea id="point-desc" rows="3" placeholder="Observações"></textarea>
                         </div>
                         
                         <div class="control-group full-width">
@@ -121,18 +591,18 @@
                     
                     <!-- Botões Principais -->
                     <div class="buttons">
-                        <button id="add-point">📍 Registrar</button>
-                        <button id="add-gps-point" class="gps">🎯 GPS</button>
-                        <button id="center-map" class="secondary">🗺️</button>
-                        <button id="clear-points" class="secondary">🗑️</button>
-                        <button id="export-kml" class="secondary">📤 KML</button>
+                        <button id="add-point">📍 Registrar Ponto</button>
+                        <button id="add-gps-point" class="gps">🎯 Registrar com GPS</button>
+                        <button id="center-map" class="secondary">🗺️ Centralizar</button>
+                        <button id="clear-points" class="secondary">🗑️ Limpar</button>
+                        <button id="export-kml" class="secondary">📤 Exportar KML</button>
                     </div>
                     
                     <!-- Estatísticas -->
                     <div class="stats">
                         <div class="stat-item">
                             <div class="stat-value" id="total-points">0</div>
-                            <div class="stat-label">Total</div>
+                            <div class="stat-label">Total de Pontos</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="categories-count">0</div>
@@ -143,7 +613,9 @@
                 
                 <!-- Lista de Pontos -->
                 <div id="points-tab" class="tab-content">
-                    <div class="points-list" id="points-container"></div>
+                    <div class="points-list" id="points-container">
+                        <p style="text-align:center;padding:20px;color:#aaa;">Nenhum ponto registrado</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,13 +631,71 @@
             maxZoom: 18
         };
 
-        // Municípios do Amazonas (apenas os principais para exemplo)
+        // Municípios do Amazonas (lista completa)
         const municipios = [
             { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
-            { id: 'parintins', nome: 'Parintins', lat: -2.6276, lng: -56.7358 },
+            { id: 'alvaraes', nome: 'Alvarães', lat: -3.2142, lng: -64.8044 },
+            { id: 'amatura', nome: 'Amaturá', lat: -3.3639, lng: -68.7969 },
+            { id: 'anama', nome: 'Anamã', lat: -3.5844, lng: -61.4042 },
+            { id: 'anori', nome: 'Anori', lat: -3.7722, lng: -61.6442 },
+            { id: 'apui', nome: 'Apuí', lat: -7.1942, lng: -59.8939 },
+            { id: 'atalaia-do-norte', nome: 'Atalaia do Norte', lat: -4.3725, lng: -70.1919 },
+            { id: 'autazes', nome: 'Autazes', lat: -3.5797, lng: -59.1308 },
+            { id: 'barcelos', nome: 'Barcelos', lat: -0.9736, lng: -62.9261 },
+            { id: 'barreirinha', nome: 'Barreirinha', lat: -2.7939, lng: -57.0678 },
+            { id: 'benjamin-constant', nome: 'Benjamin Constant', lat: -4.3758, lng: -70.0319 },
+            { id: 'beruri', nome: 'Beruri', lat: -3.8989, lng: -61.3711 },
+            { id: 'boa-vista-do-ramos', nome: 'Boa Vista do Ramos', lat: -2.9742, lng: -57.5878 },
+            { id: 'boca-do-acre', nome: 'Boca do Acre', lat: -8.7522, lng: -67.3978 },
+            { id: 'borba', nome: 'Borba', lat: -4.3914, lng: -59.5886 },
+            { id: 'caapiranga', nome: 'Caapiranga', lat: -3.3289, lng: -61.2139 },
+            { id: 'canutama', nome: 'Canutama', lat: -6.5339, lng: -64.3831 },
+            { id: 'carauari', nome: 'Carauari', lat: -4.8825, lng: -66.8958 },
+            { id: 'careiro', nome: 'Careiro', lat: -3.7681, lng: -60.3692 },
+            { id: 'careiro-da-varzea', nome: 'Careiro da Várzea', lat: -3.1972, lng: -59.8264 },
+            { id: 'coari', nome: 'Coari', lat: -4.0850, lng: -63.1414 },
+            { id: 'codajas', nome: 'Codajás', lat: -3.8367, lng: -62.0569 },
+            { id: 'eirunepe', nome: 'Eirunepé', lat: -6.6597, lng: -69.8736 },
+            { id: 'envira', nome: 'Envira', lat: -7.4378, lng: -70.0281 },
+            { id: 'fonte-boa', nome: 'Fonte Boa', lat: -2.5139, lng: -66.0919 },
+            { id: 'guajara', nome: 'Guajará', lat: -7.5378, lng: -72.5811 },
+            { id: 'humaita', nome: 'Humaitá', lat: -7.5114, lng: -63.0206 },
+            { id: 'ipixuna', nome: 'Ipixuna', lat: -7.0478, lng: -71.6939 },
+            { id: 'iranduba', nome: 'Iranduba', lat: -3.2847, lng: -60.1861 },
             { id: 'itacoatiara', nome: 'Itacoatiara', lat: -3.1431, lng: -58.4442 },
+            { id: 'itamarati', nome: 'Itamarati', lat: -6.4386, lng: -68.2439 },
+            { id: 'itapiranga', nome: 'Itapiranga', lat: -2.7461, lng: -58.0203 },
+            { id: 'japura', nome: 'Japurá', lat: -1.8822, lng: -66.9994 },
+            { id: 'jurua', nome: 'Juruá', lat: -3.4742, lng: -66.0636 },
+            { id: 'jutaí', nome: 'Jutaí', lat: -2.7431, lng: -66.7689 },
+            { id: 'lábrea', nome: 'Lábrea', lat: -7.2642, lng: -64.7947 },
             { id: 'manacapuru', nome: 'Manacapuru', lat: -3.3008, lng: -60.6206 },
-            { id: 'coari', nome: 'Coari', lat: -4.0850, lng: -63.1414 }
+            { id: 'manaquiri', nome: 'Manaquiri', lat: -3.4328, lng: -60.4589 },
+            { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
+            { id: 'manicore', nome: 'Manicoré', lat: -5.8092, lng: -61.3003 },
+            { id: 'maraa', nome: 'Maraã', lat: -1.8531, lng: -65.5731 },
+            { id: 'maues', nome: 'Maués', lat: -3.3839, lng: -57.7186 },
+            { id: 'nhamunda', nome: 'Nhamundá', lat: -2.1861, lng: -56.7131 },
+            { id: 'nova-olinda-do-norte', nome: 'Nova Olinda do Norte', lat: -3.8889, lng: -59.0942 },
+            { id: 'novo-airão', nome: 'Novo Airão', lat: -2.6211, lng: -60.9439 },
+            { id: 'novo-aripuana', nome: 'Novo Aripuanã', lat: -5.1258, lng: -60.3731 },
+            { id: 'parintins', nome: 'Parintins', lat: -2.6276, lng: -56.7358 },
+            { id: 'pauini', nome: 'Pauini', lat: -7.7136, lng: -66.9764 },
+            { id: 'presidente-figueiredo', nome: 'Presidente Figueiredo', lat: -2.0344, lng: -60.0253 },
+            { id: 'rio-preto-da-eva', nome: 'Rio Preto da Eva', lat: -2.6975, lng: -59.7011 },
+            { id: 'santa-isabel-do-rio-negro', nome: 'Santa Isabel do Rio Negro', lat: -0.4139, lng: -65.0192 },
+            { id: 'santo-antonio-do-ica', nome: 'Santo Antônio do Içá', lat: -3.1022, lng: -67.9397 },
+            { id: 'sao-gabriel-da-cachoeira', nome: 'São Gabriel da Cachoeira', lat: -0.1306, lng: -67.0892 },
+            { id: 'sao-paulo-de-olivenca', nome: 'São Paulo de Olivença', lat: -3.4658, lng: -68.8728 },
+            { id: 'sao-sebastiao-do-uatuma', nome: 'São Sebastião do Uatumã', lat: -2.5708, lng: -57.8731 },
+            { id: 'silves', nome: 'Silves', lat: -2.8411, lng: -58.2081 },
+            { id: 'tabatinga', nome: 'Tabatinga', lat: -4.2253, lng: -69.9383 },
+            { id: 'tapaua', nome: 'Tapauá', lat: -5.6208, lng: -63.1831 },
+            { id: 'tefe', nome: 'Tefé', lat: -3.3547, lng: -64.7108 },
+            { id: 'tonantins', nome: 'Tonantins', lat: -2.8731, lng: -67.8022 },
+            { id: 'uarini', nome: 'Uarini', lat: -2.9903, lng: -65.1081 },
+            { id: 'urucara', nome: 'Urucará', lat: -2.5369, lng: -57.7589 },
+            { id: 'urucurituba', nome: 'Urucurituba', lat: -3.1286, lng: -58.1553 }
         ];
 
         // Estado da aplicação
@@ -426,7 +956,7 @@
             count.textContent = state.points.length;
             
             if (state.points.length === 0) {
-                container.innerHTML = '<p style="text-align:center;padding:10px;color:#aaa;">Nenhum ponto</p>';
+                container.innerHTML = '<p style="text-align:center;padding:20px;color:#aaa;">Nenhum ponto registrado</p>';
                 return;
             }
 
