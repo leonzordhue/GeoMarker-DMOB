@@ -703,6 +703,7 @@
             points: [],
             currentMarker: null,
             gpsMarker: null,
+            gpsWatchId: null,
             map: null,
             currentLat: -3.1190,
             currentLng: -60.0217,
@@ -730,12 +731,14 @@
         function initMap() {
             state.map = L.map('map', config);
             
+            // Estilo do mapa - Google Earth-like
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '&copy; Esri'
+                attribution: '&copy; Esri, Earthstar Geographics'
             }).addTo(state.map);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
+            // Adicionar também uma camada de rótulos para melhor legibilidade
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri'
             }).addTo(state.map);
 
             state.map.on('click', function(e) {
@@ -841,33 +844,106 @@
             }
         }
 
-        // Funções do GPS
+        // Funções do GPS - CORRIGIDAS
         function toggleGps() {
             state.isGpsActive ? stopGps() : startGps();
         }
 
         function startGps() {
-            if (!navigator.geolocation) return;
+            if (!navigator.geolocation) {
+                alert("GPS não suportado pelo navegador");
+                return;
+            }
             
-            navigator.geolocation.getCurrentPosition((position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                
-                updateCoordinates(lat, lng);
-                state.map.setView([lat, lng], 15);
-                
-                if (state.gpsMarker) state.map.removeLayer(state.gpsMarker);
-                state.gpsMarker = L.marker([lat, lng]).addTo(state.map);
-                
-                document.getElementById('gps-accuracy').textContent = Math.round(position.coords.accuracy);
-                document.getElementById('gps-status').style.display = 'block';
-                document.getElementById('locate-me').classList.add('gps-active');
-                state.isGpsActive = true;
-            });
+            // Parar qualquer monitoramento anterior
+            if (state.gpsWatchId) {
+                navigator.geolocation.clearWatch(state.gpsWatchId);
+            }
+            
+            // Opções para maior precisão
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            state.gpsWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    updateCoordinates(lat, lng);
+                    state.map.setView([lat, lng], 16);
+                    
+                    // Atualizar ou criar marcador do GPS
+                    if (state.gpsMarker) {
+                        state.gpsMarker.setLatLng([lat, lng]);
+                    } else {
+                        state.gpsMarker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                className: 'gps-marker',
+                                html: '📍',
+                                iconSize: [30, 30]
+                            })
+                        }).addTo(state.map);
+                    }
+                    
+                    // Adicionar círculo de precisão
+                    if (state.accuracyCircle) {
+                        state.map.removeLayer(state.accuracyCircle);
+                    }
+                    state.accuracyCircle = L.circle([lat, lng], {
+                        radius: position.coords.accuracy,
+                        color: '#2196f3',
+                        fillColor: '#2196f3',
+                        fillOpacity: 0.1,
+                        weight: 1
+                    }).addTo(state.map);
+                    
+                    document.getElementById('gps-accuracy').textContent = Math.round(position.coords.accuracy);
+                    document.getElementById('gps-status').style.display = 'block';
+                    document.getElementById('locate-me').classList.add('gps-active');
+                    state.isGpsActive = true;
+                },
+                (error) => {
+                    console.error('Erro GPS:', error);
+                    let message = "Erro ao obter localização: ";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            message += "Permissão negada.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message += "Localização indisponível.";
+                            break;
+                        case error.TIMEOUT:
+                            message += "Tempo esgotado.";
+                            break;
+                        default:
+                            message += "Erro desconhecido.";
+                    }
+                    alert(message);
+                    stopGps();
+                },
+                options
+            );
         }
 
         function stopGps() {
-            if (state.gpsMarker) state.map.removeLayer(state.gpsMarker);
+            if (state.gpsWatchId) {
+                navigator.geolocation.clearWatch(state.gpsWatchId);
+                state.gpsWatchId = null;
+            }
+            
+            if (state.gpsMarker) {
+                state.map.removeLayer(state.gpsMarker);
+                state.gpsMarker = null;
+            }
+            
+            if (state.accuracyCircle) {
+                state.map.removeLayer(state.accuracyCircle);
+                state.accuracyCircle = null;
+            }
+            
             document.getElementById('gps-status').style.display = 'none';
             document.getElementById('locate-me').classList.remove('gps-active');
             state.isGpsActive = false;
@@ -904,7 +980,10 @@
         }
 
         function addGpsPoint() {
-            if (!state.isGpsActive) return;
+            if (!state.isGpsActive) {
+                alert("Ative o GPS primeiro para registrar com localização precisa");
+                return;
+            }
             
             const name = document.getElementById('point-name').value || `GPS ${state.points.length + 1}`;
             const point = {
@@ -1038,6 +1117,7 @@
                 kmlContent += `
     <Placemark>
         <name>${point.name}</name>
+        <description>${point.description || ''}</description>
         <Point><coordinates>${point.lng},${point.lat},0</coordinates></Point>
     </Placemark>`;
             });
@@ -1053,7 +1133,7 @@
             URL.revokeObjectURL(url);
         }
 
-        // Funções da Câmera - CORRIGIDAS
+        // Funções da Câmera - ATUALIZADAS
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
@@ -1139,13 +1219,26 @@
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Adicionar coordenadas
-            context.font = 'bold 20px Arial';
+            // Adicionar informações no canto superior direito
+            const now = new Date();
+            const municipioSelect = document.getElementById('municipio-select');
+            const municipio = municipios.find(m => m.id === municipioSelect.value)?.nome || 'Desconhecido';
+            const categoria = document.getElementById('point-category').options[document.getElementById('point-category').selectedIndex].text;
+            
+            // Fundo semi-transparente para as informações
+            context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            context.fillRect(canvas.width - 300, 10, 290, 120);
+            
+            // Informações da foto
+            context.font = 'bold 14px Arial';
             context.fillStyle = 'white';
-            context.strokeStyle = 'black';
-            context.lineWidth = 3;
-            context.strokeText(`📍 ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, 20, 40);
-            context.fillText(`📍 ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, 20, 40);
+            context.textAlign = 'right';
+            
+            context.fillText(`Data: ${now.toLocaleDateString('pt-BR')}`, canvas.width - 15, 30);
+            context.fillText(`Hora: ${now.toLocaleTimeString('pt-BR')}`, canvas.width - 15, 50);
+            context.fillText(`Local: ${municipio}`, canvas.width - 15, 70);
+            context.fillText(`Categoria: ${categoria}`, canvas.width - 15, 90);
+            context.fillText(`Coordenadas: ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`, canvas.width - 15, 110);
             
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
