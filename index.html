@@ -1134,6 +1134,9 @@
                     cameraPreview.style.display = 'block';
                     cameraControls.style.display = 'flex';
                     
+                    // Esconder o resultado se estiver visível
+                    document.getElementById('camera-fullscreen-result').style.display = 'none';
+                    
                     // Entrar no modo tela cheia
                     document.getElementById('camera-fullscreen').style.display = 'flex';
                     state.isCameraFullscreen = true;
@@ -1193,9 +1196,11 @@
             
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
+            
+            // Mudar a visibilidade - CORREÇÃO AQUI
             photoResult.style.display = 'flex';
             cameraPreview.style.display = 'none';
-            cameraControls.style.display = 'none';
+            cameraControls.style.display = 'none'; // Esconder controles durante visualização da foto
         }
 
         function savePhotoToDevice() {
@@ -1228,26 +1233,40 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const cameraControls = document.getElementById('camera-fullscreen-controls');
             
+            // CORREÇÃO PRINCIPAL - Garantir que todos os elementos estejam no estado correto
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
-            if (cameraControls) cameraControls.style.display = 'flex';
+            if (cameraControls) cameraControls.style.display = 'flex'; // MOSTRAR controles novamente
+            
             state.currentPhotoData = null;
+            
+            // Garantir que o vídeo continue funcionando
+            const video = document.getElementById('video-fullscreen');
+            if (video && state.stream) {
+                video.srcObject = state.stream;
+            }
         }
 
         function closeCameraFullscreen() {
+            // Parar a stream da câmera
             if (state.stream) {
                 state.stream.getTracks().forEach(track => track.stop());
                 state.stream = null;
             }
             
-            document.getElementById('camera-fullscreen').style.display = 'none';
-            document.getElementById('camera-fullscreen-preview').style.display = 'none';
-            document.getElementById('camera-fullscreen-result').style.display = 'none';
-            
+            // Resetar todos os elementos da câmera
+            const cameraFullscreen = document.getElementById('camera-fullscreen');
+            const cameraPreview = document.getElementById('camera-fullscreen-preview');
+            const photoResult = document.getElementById('camera-fullscreen-result');
             const cameraControls = document.getElementById('camera-fullscreen-controls');
-            if (cameraControls) cameraControls.style.display = 'flex';
+            
+            if (cameraFullscreen) cameraFullscreen.style.display = 'none';
+            if (cameraPreview) cameraPreview.style.display = 'none';
+            if (photoResult) photoResult.style.display = 'none';
+            if (cameraControls) cameraControls.style.display = 'flex'; // Garantir que controles estejam visíveis
             
             state.isCameraFullscreen = false;
+            state.currentPhotoData = null;
         }
 
         // Armazenamento
