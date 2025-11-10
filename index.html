@@ -943,12 +943,21 @@
                 lat: state.currentLat, lng: state.currentLng,
                 timestamp: new Date().toISOString(),
                 municipio: municipio ? municipio.nome : 'Desconhecido',
-                source: 'manual'
+                source: 'manual',
+                metadata: {
+                    sistema: "GeoMarker DMOB",
+                    versao: "2.0",
+                    projeto: "Obras de Arte Especiais",
+                    datum: "WGS84",
+                    precisao: state.isGpsActive ? document.getElementById('gps-accuracy').textContent + 'm' : 'Manual'
+                }
             };
 
             if (state.currentPhotoData) {
                 point.photo = state.currentPhotoData;
                 point.hasGeophoto = true;
+                point.metadata.foto = "Sim";
+                point.metadata.data_foto = new Date().toISOString();
             }
 
             state.points.push(point);
@@ -975,12 +984,22 @@
                 lat: state.currentLat, lng: state.currentLng,
                 timestamp: new Date().toISOString(),
                 municipio: municipios.find(m => m.id === document.getElementById('municipio-select').value)?.nome || 'Desconhecido',
-                source: 'gps'
+                source: 'gps',
+                metadata: {
+                    sistema: "GeoMarker DMOB",
+                    versao: "2.0",
+                    projeto: "Obras de Arte Especiais",
+                    datum: "WGS84",
+                    precisao: document.getElementById('gps-accuracy').textContent + 'm',
+                    metodo_coleta: "GPS"
+                }
             };
 
             if (state.currentPhotoData) {
                 point.photo = state.currentPhotoData;
                 point.hasGeophoto = true;
+                point.metadata.foto = "Sim";
+                point.metadata.data_foto = new Date().toISOString();
             }
 
             state.points.push(point);
@@ -1091,14 +1110,70 @@
             
             let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-<Document><name>GeoMarker - DMOB</name>`;
+<Document>
+    <name>GeoMarker - DMOB</name>
+    <description>Pontos georreferenciados coletados pelo sistema GeoMarker DMOB</description>
+    <open>1</open>`;
 
             state.points.forEach(point => {
+                const date = new Date(point.timestamp);
+                
+                // Criar descrição rica em metadados para ArcGIS
+                let description = `<![CDATA[
+                    <h3>${point.name}</h3>
+                    <p><strong>Categoria:</strong> ${getCategoryName(point.category)}</p>
+                    <p><strong>Município:</strong> ${point.municipio}</p>
+                    <p><strong>Descrição:</strong> ${point.description || 'Nenhuma descrição'}</p>
+                    <p><strong>Coordenadas:</strong> ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</p>
+                    <p><strong>Data/Hora:</strong> ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}</p>
+                    <p><strong>Método:</strong> ${point.source === 'gps' ? 'GPS' : 'Manual'}</p>
+                    ${point.metadata.precisao ? `<p><strong>Precisão:</strong> ${point.metadata.precisao}</p>` : ''}
+                    ${point.hasGeophoto ? '<p><strong>Possui foto georreferenciada</strong></p>' : ''}
+                    <hr>
+                    <p><em>Coletado com GeoMarker DMOB v2.0</em></p>
+                ]]>`;
+
                 kmlContent += `
     <Placemark>
         <name>${point.name}</name>
-        <description>${point.description || ''}</description>
-        <Point><coordinates>${point.lng},${point.lat},0</coordinates></Point>
+        <description>${description}</description>
+        <TimeStamp>
+            <when>${point.timestamp}</when>
+        </TimeStamp>
+        <ExtendedData>
+            <Data name="sistema">
+                <value>${point.metadata.sistema}</value>
+            </Data>
+            <Data name="versao">
+                <value>${point.metadata.versao}</value>
+            </Data>
+            <Data name="projeto">
+                <value>${point.metadata.projeto}</value>
+            </Data>
+            <Data name="categoria">
+                <value>${getCategoryName(point.category)}</value>
+            </Data>
+            <Data name="municipio">
+                <value>${point.municipio}</value>
+            </Data>
+            <Data name="datum">
+                <value>${point.metadata.datum}</value>
+            </Data>
+            <Data name="metodo_coleta">
+                <value>${point.source === 'gps' ? 'GPS' : 'Manual'}</value>
+            </Data>
+            ${point.metadata.precisao ? `
+            <Data name="precisao">
+                <value>${point.metadata.precisao}</value>
+            </Data>` : ''}
+            ${point.metadata.foto ? `
+            <Data name="possui_foto">
+                <value>${point.metadata.foto}</value>
+            </Data>` : ''}
+        </ExtendedData>
+        <Point>
+            <coordinates>${point.lng},${point.lat},0</coordinates>
+        </Point>
     </Placemark>`;
             });
 
@@ -1108,7 +1183,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `geomarker_${new Date().toISOString().split('T')[0]}.kml`;
+            a.download = `geomarker_dmob_${new Date().toISOString().split('T')[0]}.kml`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -1166,14 +1241,13 @@
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Adicionar informações no canto superior direito - SEM CAIXA DE FUNDO
+            // Adicionar informações no canto superior direito
             const now = new Date();
             const municipioSelect = document.getElementById('municipio-select');
             const municipio = municipios.find(m => m.id === municipioSelect.value)?.nome || 'Desconhecido';
             const categoria = document.getElementById('point-category').options[document.getElementById('point-category').selectedIndex].text;
             const identificacao = document.getElementById('point-name').value || 'Sem identificação';
             
-            // Informações da foto - APENAS TEXTO
             context.font = 'bold 16px Arial';
             context.fillStyle = 'white';
             context.strokeStyle = 'black';
@@ -1197,10 +1271,10 @@
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
             
-            // Mudar a visibilidade - CORREÇÃO AQUI
+            // CORREÇÃO DEFINITIVA: Garantir que os controles sejam mostrados ao retomar
             photoResult.style.display = 'flex';
             cameraPreview.style.display = 'none';
-            cameraControls.style.display = 'none'; // Esconder controles durante visualização da foto
+            cameraControls.style.display = 'none';
         }
 
         function savePhotoToDevice() {
@@ -1233,10 +1307,10 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const cameraControls = document.getElementById('camera-fullscreen-controls');
             
-            // CORREÇÃO PRINCIPAL - Garantir que todos os elementos estejam no estado correto
+            // CORREÇÃO DEFINITIVA: Garantir que os controles sejam mostrados
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
-            if (cameraControls) cameraControls.style.display = 'flex'; // MOSTRAR controles novamente
+            if (cameraControls) cameraControls.style.display = 'flex';
             
             state.currentPhotoData = null;
             
@@ -1263,7 +1337,7 @@
             if (cameraFullscreen) cameraFullscreen.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'none';
             if (photoResult) photoResult.style.display = 'none';
-            if (cameraControls) cameraControls.style.display = 'flex'; // Garantir que controles estejam visíveis
+            if (cameraControls) cameraControls.style.display = 'flex';
             
             state.isCameraFullscreen = false;
             state.currentPhotoData = null;
