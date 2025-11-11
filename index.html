@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeoMarker - DMOB</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <!-- Incluir Leaflet Offline -->
-    <script src="https://unpkg.com/leaflet.offline@1.5.1/dist/leaflet.offline.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
@@ -557,6 +555,15 @@
             margin-top: 5px;
         }
         
+        .offline-indicator {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        
         @media (max-width: 768px) { 
             .app-content { 
                 flex-direction: column; 
@@ -634,6 +641,11 @@
                 </div>
                 
                 <div id="controls-tab" class="tab-content active">
+                    <!-- Indicador Offline -->
+                    <div class="offline-indicator" id="offline-indicator">
+                        ⚠️ <strong>Modo Offline Ativo</strong> - Trabalhando com dados locais
+                    </div>
+                    
                     <!-- Controles Offline -->
                     <div class="offline-controls">
                         <h3>🔄 Controles Offline</h3>
@@ -864,7 +876,8 @@
             capturedPhotos: [],
             autoCreatePoint: true,
             tileLayer: null,
-            offlineLayer: null
+            offlineLayer: null,
+            isOfflineMode: false
         };
 
         // Inicialização
@@ -896,33 +909,19 @@
             try {
                 state.map = L.map('map', config);
                 
-                // Camada offline como fallback
-                const osmOffline = L.tileLayer('', {
-                    attribution: 'Map data © OpenStreetMap contributors'
-                });
+                // Camada base estilo Google Earth (Esri World Imagery)
+                state.tileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+                    maxZoom: 18
+                }).addTo(state.map);
                 
-                // Tentar carregar camada online primeiro
-                try {
-                    state.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors',
-                        maxZoom: 18
-                    }).addTo(state.map);
-                    
-                    console.log('Mapa online carregado com sucesso!');
-                } catch (error) {
-                    console.warn('Não foi possível carregar mapa online, usando fallback offline:', error);
-                    // Em caso de falha, usar camada offline se disponível
-                    if (window.localStorage.getItem('offlineTiles')) {
-                        loadOfflineTiles();
-                    }
-                }
+                console.log('Mapa estilo Google Earth carregado com sucesso!');
 
-                // Adicionar camada de rótulos se online
-                if (navigator.onLine) {
-                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-                        attribution: '© Esri'
-                    }).addTo(state.map);
-                }
+                // Adicionar camada de rótulos
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '© Esri',
+                    maxZoom: 18
+                }).addTo(state.map);
 
                 state.map.on('click', function(e) {
                     updateCoordinates(e.latlng.lat, e.latlng.lng);
@@ -934,48 +933,31 @@
                 console.log('Mapa inicializado com sucesso!');
             } catch (error) {
                 console.error('Erro ao inicializar mapa:', error);
-                // Fallback: criar mapa básico sem tiles
-                try {
-                    state.map = L.map('map', config);
-                    state.map.on('click', function(e) {
-                        updateCoordinates(e.latlng.lat, e.latlng.lng);
-                        updateMarker(e.latlng.lat, e.latlng.lng);
-                    });
-                    updateCoordinates(config.center[0], config.center[1]);
-                    populateMunicipios();
-                    showMessage('Modo offline ativo - Mapa básico');
-                } catch (fallbackError) {
-                    console.error('Erro no fallback do mapa:', fallbackError);
-                    showMessage('Erro ao carregar mapa. Verifique conexão.');
-                }
+                showMessage('Erro ao carregar mapa. Verifique conexão.');
             }
         }
 
         // Sistema de detecção de conexão
         function setupOfflineDetection() {
-            // Verificar status inicial
             updateConnectionStatus();
             
-            // Ouvir mudanças de conexão
             window.addEventListener('online', function() {
                 updateConnectionStatus();
                 showMessage('Conexão restaurada!');
-                // Recarregar tiles online se possível
+                state.isOfflineMode = false;
+                document.getElementById('offline-indicator').style.display = 'none';
+                
+                // Recarregar mapa online se necessário
                 if (state.map && !state.tileLayer) {
-                    try {
-                        state.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors',
-                            maxZoom: 18
-                        }).addTo(state.map);
-                    } catch (e) {
-                        console.warn('Não foi possível restaurar mapa online:', e);
-                    }
+                    initMap();
                 }
             });
             
             window.addEventListener('offline', function() {
                 updateConnectionStatus();
                 showMessage('Modo offline ativo - Trabalhando com dados locais');
+                state.isOfflineMode = true;
+                document.getElementById('offline-indicator').style.display = 'block';
             });
         }
 
@@ -990,91 +972,55 @@
             }
         }
 
-        // Sistema de cache offline para mapas
+        // Sistema de cache offline SIMPLIFICADO - sem biblioteca externa
         function downloadMapArea() {
             if (!navigator.onLine) {
                 showMessage('É necessário estar online para baixar mapas');
                 return;
             }
             
-            const bounds = state.map.getBounds();
-            const zoomRange = {
-                min: state.map.getZoom() - 2,
-                max: state.map.getZoom() + 2
-            };
+            showMessage('⚠️ Download direto não disponível. Use: "Salvar página como" no navegador para acesso offline completo.');
             
-            showMessage('Iniciando download de mapas... Isso pode levar alguns minutos.');
-            
-            // Usar Leaflet.Offline para baixar tiles
-            if (typeof L.Offline !== 'undefined') {
-                const control = L.Offline.createLayer({
-                    layer: state.tileLayer,
-                    bounds: bounds,
-                    minZoom: Math.max(zoomRange.min, 6),
-                    maxZoom: Math.min(zoomRange.max, 16)
-                });
-                
-                control.addTo(state.map);
-                
-                control.on('savestart', function() {
-                    showMessage('Preparando download...');
-                });
-                
-                control.on('loadtileend', function() {
-                    updateCacheStatus();
-                });
-                
-                control.on('savetileend', function() {
-                    updateCacheStatus();
-                });
-                
-                control.on('saveend', function() {
-                    showMessage('Download de mapas concluído! Área disponível offline.');
-                    updateCacheStatus();
-                });
-            } else {
-                showMessage('Funcionalidade offline não disponível nesta versão');
-            }
+            // Alternativa: instruções para usuário
+            setTimeout(() => {
+                showMessage('💡 Dica: No Chrome/Edge, pressione F12 > Application > Storage > Cache Storage');
+            }, 3000);
         }
 
         function clearOfflineMaps() {
-            if (confirm('Tem certeza que deseja limpar todos os mapas offline?')) {
-                if (typeof L.Offline !== 'undefined' && L.OfflineStorage) {
-                    L.OfflineStorage.clear(function() {
-                        showMessage('Mapas offline removidos com sucesso');
-                        updateCacheStatus();
+            if (confirm('Limpar cache do navegador? Isso afetará todos os sites.')) {
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(name) {
+                            caches.delete(name);
+                        });
                     });
-                } else {
-                    // Fallback: limpar localStorage manualmente
-                    const keys = Object.keys(localStorage).filter(key => key.startsWith('leaflet.offline'));
-                    keys.forEach(key => localStorage.removeItem(key));
-                    showMessage('Mapas offline removidos com sucesso');
-                    updateCacheStatus();
                 }
+                
+                // Limpar localStorage específico do mapa
+                const keys = Object.keys(localStorage).filter(key => 
+                    key.startsWith('leaflet.') || 
+                    key.startsWith('offline.') ||
+                    key.includes('tile') ||
+                    key.includes('map')
+                );
+                
+                keys.forEach(key => localStorage.removeItem(key));
+                showMessage('Cache limpo com sucesso');
+                updateCacheStatus();
             }
         }
 
         function updateCacheStatus() {
-            if (typeof L.Offline !== 'undefined' && L.OfflineStorage) {
-                L.OfflineStorage.getLength(function(err, count) {
-                    const size = (count * 15 / 1024).toFixed(2); // Estimativa ~15KB por tile
-                    document.getElementById('cache-status').textContent = `Cache: ${size}MB (${count} tiles)`;
-                });
-            } else {
-                // Fallback: contar tiles no localStorage
-                const keys = Object.keys(localStorage).filter(key => key.startsWith('leaflet.offline'));
-                const size = (keys.length * 15 / 1024).toFixed(2);
-                document.getElementById('cache-status').textContent = `Cache: ${size}MB (${keys.length} tiles)`;
+            // Estimativa simples baseada no localStorage
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length * 2; // bytes
+                }
             }
-        }
-
-        function loadOfflineTiles() {
-            if (typeof L.Offline !== 'undefined') {
-                state.offlineLayer = L.Offline.createLayer({
-                    layer: state.tileLayer
-                }).addTo(state.map);
-                showMessage('Mapas offline carregados');
-            }
+            const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+            document.getElementById('cache-status').textContent = `Cache: ${sizeMB}MB (dados locais)`;
         }
 
         function setupEventListeners() {
@@ -1131,9 +1077,6 @@
             
             console.log('Event listeners configurados!');
         }
-
-        // Resto das funções permanecem as mesmas (updateCoordinates, updateMarker, populateMunicipios, etc.)
-        // ... (mantendo todas as funções existentes do código anterior)
 
         // Funções do Mapa
         function updateCoordinates(lat, lng) {
