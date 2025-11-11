@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeoMarker - DMOB</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Incluir Leaflet Offline -->
+    <script src="https://unpkg.com/leaflet.offline@1.5.1/dist/leaflet.offline.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
@@ -32,6 +34,7 @@
             background: rgba(0, 0, 0, 0.7); 
             border-bottom: 2px solid rgba(76, 175, 80, 0.3); 
             text-align: center;
+            position: relative;
         }
         
         h1 { 
@@ -47,6 +50,26 @@
         header p {
             color: #ccc;
             font-size: 1rem;
+        }
+        
+        .connection-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .online {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .offline {
+            background: #f44336;
+            color: white;
         }
         
         .app-content { 
@@ -514,6 +537,26 @@
             height: 16px;
         }
         
+        .offline-controls {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+        }
+        
+        .offline-controls h3 {
+            color: #ffc107;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .cache-status {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
         @media (max-width: 768px) { 
             .app-content { 
                 flex-direction: column; 
@@ -561,6 +604,7 @@
         <header>
             <h1>GeoMarker - DMOB</h1>
             <p>Sistema de georreferenciamento desenvolvido pelo departamento de mobilidade do Amazonas</p>
+            <div id="connection-status" class="connection-status online">✅ Online</div>
         </header>
         
         <div class="app-content">
@@ -590,6 +634,14 @@
                 </div>
                 
                 <div id="controls-tab" class="tab-content active">
+                    <!-- Controles Offline -->
+                    <div class="offline-controls">
+                        <h3>🔄 Controles Offline</h3>
+                        <button id="download-map-area" class="secondary">🗺️ Baixar Mapas para Área Atual</button>
+                        <button id="clear-offline-maps" class="secondary">🗑️ Limpar Mapas Offline</button>
+                        <div class="cache-status" id="cache-status">Cache: 0MB</div>
+                    </div>
+                    
                     <!-- Município e Coordenadas -->
                     <div class="control-group">
                         <label>Município:</label>
@@ -810,7 +862,9 @@
             isCameraFullscreen: false,
             flashMode: 'auto',
             capturedPhotos: [],
-            autoCreatePoint: true
+            autoCreatePoint: true,
+            tileLayer: null,
+            offlineLayer: null
         };
 
         // Inicialização
@@ -820,6 +874,7 @@
             setupEventListeners();
             loadPointsFromStorage();
             updateStats();
+            setupOfflineDetection();
             
             // Verificar se é mobile E se a seção da câmera existe
             if (isMobileDevice()) {
@@ -831,6 +886,9 @@
             
             // Configurar auto create point
             document.getElementById('auto-create-point').checked = state.autoCreatePoint;
+            
+            // Atualizar status do cache
+            updateCacheStatus();
         });
 
         function initMap() {
@@ -838,15 +896,33 @@
             try {
                 state.map = L.map('map', config);
                 
-                // Estilo do mapa - Google Earth-like
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: '&copy; Esri, Earthstar Geographics'
-                }).addTo(state.map);
+                // Camada offline como fallback
+                const osmOffline = L.tileLayer('', {
+                    attribution: 'Map data © OpenStreetMap contributors'
+                });
+                
+                // Tentar carregar camada online primeiro
+                try {
+                    state.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 18
+                    }).addTo(state.map);
+                    
+                    console.log('Mapa online carregado com sucesso!');
+                } catch (error) {
+                    console.warn('Não foi possível carregar mapa online, usando fallback offline:', error);
+                    // Em caso de falha, usar camada offline se disponível
+                    if (window.localStorage.getItem('offlineTiles')) {
+                        loadOfflineTiles();
+                    }
+                }
 
-                // Adicionar também uma camada de rótulos para melhor legibilidade
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-                    attribution: '&copy; Esri'
-                }).addTo(state.map);
+                // Adicionar camada de rótulos se online
+                if (navigator.onLine) {
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: '© Esri'
+                    }).addTo(state.map);
+                }
 
                 state.map.on('click', function(e) {
                     updateCoordinates(e.latlng.lat, e.latlng.lng);
@@ -858,6 +934,146 @@
                 console.log('Mapa inicializado com sucesso!');
             } catch (error) {
                 console.error('Erro ao inicializar mapa:', error);
+                // Fallback: criar mapa básico sem tiles
+                try {
+                    state.map = L.map('map', config);
+                    state.map.on('click', function(e) {
+                        updateCoordinates(e.latlng.lat, e.latlng.lng);
+                        updateMarker(e.latlng.lat, e.latlng.lng);
+                    });
+                    updateCoordinates(config.center[0], config.center[1]);
+                    populateMunicipios();
+                    showMessage('Modo offline ativo - Mapa básico');
+                } catch (fallbackError) {
+                    console.error('Erro no fallback do mapa:', fallbackError);
+                    showMessage('Erro ao carregar mapa. Verifique conexão.');
+                }
+            }
+        }
+
+        // Sistema de detecção de conexão
+        function setupOfflineDetection() {
+            // Verificar status inicial
+            updateConnectionStatus();
+            
+            // Ouvir mudanças de conexão
+            window.addEventListener('online', function() {
+                updateConnectionStatus();
+                showMessage('Conexão restaurada!');
+                // Recarregar tiles online se possível
+                if (state.map && !state.tileLayer) {
+                    try {
+                        state.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors',
+                            maxZoom: 18
+                        }).addTo(state.map);
+                    } catch (e) {
+                        console.warn('Não foi possível restaurar mapa online:', e);
+                    }
+                }
+            });
+            
+            window.addEventListener('offline', function() {
+                updateConnectionStatus();
+                showMessage('Modo offline ativo - Trabalhando com dados locais');
+            });
+        }
+
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connection-status');
+            if (navigator.onLine) {
+                statusElement.textContent = '✅ Online';
+                statusElement.className = 'connection-status online';
+            } else {
+                statusElement.textContent = '❌ Offline';
+                statusElement.className = 'connection-status offline';
+            }
+        }
+
+        // Sistema de cache offline para mapas
+        function downloadMapArea() {
+            if (!navigator.onLine) {
+                showMessage('É necessário estar online para baixar mapas');
+                return;
+            }
+            
+            const bounds = state.map.getBounds();
+            const zoomRange = {
+                min: state.map.getZoom() - 2,
+                max: state.map.getZoom() + 2
+            };
+            
+            showMessage('Iniciando download de mapas... Isso pode levar alguns minutos.');
+            
+            // Usar Leaflet.Offline para baixar tiles
+            if (typeof L.Offline !== 'undefined') {
+                const control = L.Offline.createLayer({
+                    layer: state.tileLayer,
+                    bounds: bounds,
+                    minZoom: Math.max(zoomRange.min, 6),
+                    maxZoom: Math.min(zoomRange.max, 16)
+                });
+                
+                control.addTo(state.map);
+                
+                control.on('savestart', function() {
+                    showMessage('Preparando download...');
+                });
+                
+                control.on('loadtileend', function() {
+                    updateCacheStatus();
+                });
+                
+                control.on('savetileend', function() {
+                    updateCacheStatus();
+                });
+                
+                control.on('saveend', function() {
+                    showMessage('Download de mapas concluído! Área disponível offline.');
+                    updateCacheStatus();
+                });
+            } else {
+                showMessage('Funcionalidade offline não disponível nesta versão');
+            }
+        }
+
+        function clearOfflineMaps() {
+            if (confirm('Tem certeza que deseja limpar todos os mapas offline?')) {
+                if (typeof L.Offline !== 'undefined' && L.OfflineStorage) {
+                    L.OfflineStorage.clear(function() {
+                        showMessage('Mapas offline removidos com sucesso');
+                        updateCacheStatus();
+                    });
+                } else {
+                    // Fallback: limpar localStorage manualmente
+                    const keys = Object.keys(localStorage).filter(key => key.startsWith('leaflet.offline'));
+                    keys.forEach(key => localStorage.removeItem(key));
+                    showMessage('Mapas offline removidos com sucesso');
+                    updateCacheStatus();
+                }
+            }
+        }
+
+        function updateCacheStatus() {
+            if (typeof L.Offline !== 'undefined' && L.OfflineStorage) {
+                L.OfflineStorage.getLength(function(err, count) {
+                    const size = (count * 15 / 1024).toFixed(2); // Estimativa ~15KB por tile
+                    document.getElementById('cache-status').textContent = `Cache: ${size}MB (${count} tiles)`;
+                });
+            } else {
+                // Fallback: contar tiles no localStorage
+                const keys = Object.keys(localStorage).filter(key => key.startsWith('leaflet.offline'));
+                const size = (keys.length * 15 / 1024).toFixed(2);
+                document.getElementById('cache-status').textContent = `Cache: ${size}MB (${keys.length} tiles)`;
+            }
+        }
+
+        function loadOfflineTiles() {
+            if (typeof L.Offline !== 'undefined') {
+                state.offlineLayer = L.Offline.createLayer({
+                    layer: state.tileLayer
+                }).addTo(state.map);
+                showMessage('Mapas offline carregados');
             }
         }
 
@@ -873,6 +1089,10 @@
             document.getElementById('center-map').addEventListener('click', centerMap);
             document.getElementById('locate-me').addEventListener('click', toggleGps);
             document.getElementById('go-to-coords').addEventListener('click', goToManualCoords);
+            
+            // Controles offline
+            document.getElementById('download-map-area').addEventListener('click', downloadMapArea);
+            document.getElementById('clear-offline-maps').addEventListener('click', clearOfflineMaps);
             
             // Câmera
             document.getElementById('start-camera').addEventListener('click', startCameraFullscreen);
@@ -911,6 +1131,9 @@
             
             console.log('Event listeners configurados!');
         }
+
+        // Resto das funções permanecem as mesmas (updateCoordinates, updateMarker, populateMunicipios, etc.)
+        // ... (mantendo todas as funções existentes do código anterior)
 
         // Funções do Mapa
         function updateCoordinates(lat, lng) {
