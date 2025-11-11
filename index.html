@@ -495,6 +495,18 @@
             gap: 15px;
         }
         
+        .auto-point-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .auto-point-toggle input {
+            width: 16px;
+            height: 16px;
+        }
+        
         @media (max-width: 768px) { 
             .app-content { 
                 flex-direction: column; 
@@ -587,6 +599,10 @@
                         <div class="camera-controls">
                             <button id="start-camera" class="gps">📷 Modo Câmera</button>
                         </div>
+                        <div class="auto-point-toggle">
+                            <input type="checkbox" id="auto-create-point" checked>
+                            <label for="auto-create-point">Criar ponto automaticamente ao tirar foto</label>
+                        </div>
                     </div>
                     
                     <!-- Registro de Pontos -->
@@ -609,6 +625,7 @@
                                 <option value="patologias-pista">Patologias</option>
                                 <option value="viaduto-oae">Viaduto - OAE</option>
                                 <option value="medicao">Medição</option>
+                                <option value="foto">Foto Georreferenciada</option>
                             </select>
                         </div>
                         
@@ -776,7 +793,8 @@
             currentPhotoData: null,
             isCameraFullscreen: false,
             flashMode: 'auto',
-            capturedPhotos: []
+            capturedPhotos: [],
+            autoCreatePoint: true
         };
 
         // Inicialização
@@ -794,6 +812,9 @@
                     cameraSection.style.display = 'block';
                 }
             }
+            
+            // Configurar auto create point
+            document.getElementById('auto-create-point').checked = state.autoCreatePoint;
         });
 
         function initMap() {
@@ -849,6 +870,11 @@
             document.getElementById('flash-auto').addEventListener('click', () => setFlashMode('auto'));
             document.getElementById('flash-on').addEventListener('click', () => setFlashMode('on'));
             document.getElementById('flash-off').addEventListener('click', () => setFlashMode('off'));
+            
+            // Auto create point toggle
+            document.getElementById('auto-create-point').addEventListener('change', function() {
+                state.autoCreatePoint = this.checked;
+            });
             
             // Navegação
             document.getElementById('zoom-in').addEventListener('click', () => state.map.zoomIn());
@@ -1115,18 +1141,84 @@
             document.getElementById('point-desc').value = '';
         }
 
-        function addPointToMap(point) {
-            const marker = L.marker([point.lat, point.lng]).addTo(state.map);
+        // NOVA FUNÇÃO: Criar ponto automaticamente com foto
+        function createAutoPointWithPhoto(photoData) {
+            const now = new Date();
+            const name = `Foto_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
             
-            const popupContent = `
-                <div style="min-width:200px;">
-                    <h3>${point.name} ${point.hasGeophoto ? '📍' : ''}</h3>
-                    <p>${point.description}</p>
-                    <p><small>${getCategoryName(point.category)} - ${point.municipio}</small></p>
-                    <p><small>${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</small></p>
-                    ${point.photo ? `<img src="${point.photo}" style="max-width:100%;border-radius:5px;margin-top:5px;">` : ''}
-                </div>
+            const point = {
+                id: Date.now(), 
+                name: name,
+                description: `Foto georreferenciada automática - Coordenadas: ${state.currentLat.toFixed(6)}, ${state.currentLng.toFixed(6)}`,
+                category: 'foto',
+                lat: state.currentLat, 
+                lng: state.currentLng,
+                timestamp: now.toISOString(),
+                municipio: municipios.find(m => m.id === document.getElementById('municipio-select').value)?.nome || 'Desconhecido',
+                source: state.isGpsActive ? 'gps' : 'manual',
+                photo: photoData,
+                hasGeophoto: true,
+                metadata: {
+                    sistema: "GeoMarker DMOB",
+                    versao: "2.0",
+                    projeto: "Obras de Arte Especiais",
+                    datum: "WGS84",
+                    precisao: state.isGpsActive ? document.getElementById('gps-accuracy').textContent + 'm' : 'Manual',
+                    metodo_coleta: state.isGpsActive ? "GPS" : "Manual",
+                    foto: "Sim",
+                    data_foto: now.toISOString(),
+                    tipo_ponto: "Automático por Foto"
+                }
+            };
+
+            state.points.push(point);
+            renderPointsList();
+            addPointToMap(point);
+            savePointsToStorage();
+            updateStats();
+            
+            showMessage(`Ponto criado automaticamente: ${name}`);
+        }
+
+        function addPointToMap(point) {
+            // Criar ícone personalizado para pontos com foto
+            const photoIcon = point.photo ? 
+                L.divIcon({
+                    className: 'photo-marker',
+                    html: '📸',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                }) : null;
+
+            const marker = L.marker([point.lat, point.lng], { icon: photoIcon }).addTo(state.map);
+            
+            // Construir conteúdo do popup com a foto
+            let popupContent = `
+                <div style="min-width:250px;max-width:400px;">
+                    <h3 style="margin:0 0 10px 0;color:#1a5c2f;">${point.name}</h3>
+                    <div style="margin-bottom:8px;">
+                        <strong>Categoria:</strong> ${getCategoryName(point.category)}<br>
+                        <strong>Município:</strong> ${point.municipio}<br>
+                        <strong>Data:</strong> ${new Date(point.timestamp).toLocaleString('pt-BR')}
+                    </div>
             `;
+            
+            if (point.description) {
+                popupContent += `<div style="margin-bottom:8px;"><strong>Descrição:</strong> ${point.description}</div>`;
+            }
+            
+            popupContent += `<div style="margin-bottom:8px;"><strong>Coordenadas:</strong><br>${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</div>`;
+            
+            if (point.photo) {
+                popupContent += `
+                    <div style="text-align:center;margin-top:10px;">
+                        <img src="${point.photo}" style="max-width:100%;max-height:300px;border-radius:5px;border:2px solid #4caf50;">
+                        <div style="margin-top:5px;font-size:0.8em;color:#666;">Foto georreferenciada</div>
+                    </div>
+                `;
+            }
+            
+            popupContent += `</div>`;
             
             marker.bindPopup(popupContent);
             point.marker = marker;
@@ -1152,6 +1244,7 @@
                         <div class="point-details">
                             ${getCategoryName(point.category)} • ${point.municipio}<br>
                             ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}
+                            ${point.photo ? '<br>📸 Com foto' : ''}
                         </div>
                     </div>
                     <div class="point-actions">
@@ -1167,7 +1260,27 @@
             container.querySelectorAll('.view-point').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const point = state.points.find(p => p.id === parseInt(btn.dataset.id));
-                    if (point) state.map.setView([point.lat, point.lng], 15);
+                    if (point) {
+                        state.map.setView([point.lat, point.lng], 16);
+                        if (point.marker) point.marker.openPopup();
+                    }
+                });
+            });
+
+            container.querySelectorAll('.view-photo').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const point = state.points.find(p => p.id === parseInt(btn.dataset.id));
+                    if (point && point.photo) {
+                        const newWindow = window.open();
+                        newWindow.document.write(`
+                            <html>
+                                <head><title>${point.name}</title></head>
+                                <body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;">
+                                    <img src="${point.photo}" style="max-width:100%;max-height:100%;">
+                                </body>
+                            </html>
+                        `);
+                    }
                 });
             });
 
@@ -1200,7 +1313,7 @@
                 'galeria-oae': 'Galeria - OAE', 'viario-urbano': 'Viário - Urbano',
                 'jazida': 'Jazida', 'ramal': 'Ramal', 'rodovia': 'Rodovia',
                 'patologias-pista': 'Patologias', 'viaduto-oae': 'Viaduto - OAE',
-                'medicao': 'Medição'
+                'medicao': 'Medição', 'foto': 'Foto Georreferenciada'
             };
             return categories[category] || 'Desconhecida';
         }
@@ -1222,21 +1335,40 @@
             state.points.forEach(point => {
                 const date = new Date(point.timestamp);
                 
-                // Criar descrição rica em metadados para ArcGIS
+                // Criar descrição rica em HTML para Google Earth
                 let description = `<![CDATA[
-                    <h3>${point.name}</h3>
-                    <p><strong>Categoria:</strong> ${getCategoryName(point.category)}</p>
-                    <p><strong>Município:</strong> ${point.municipio}</p>
-                    <p><strong>Descrição:</strong> ${point.description || 'Nenhuma descrição'}</p>
-                    <p><strong>Coordenadas:</strong> ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</p>
-                    <p><strong>Data/Hora:</strong> ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}</p>
-                    <p><strong>Método:</strong> ${point.source === 'gps' ? 'GPS' : 'Manual'}</p>
-                    ${point.metadata.precisao ? `<p><strong>Precisão:</strong> ${point.metadata.precisao}</p>` : ''}
-                    ${point.hasGeophoto ? '<p><strong>Possui foto georreferenciada</strong></p>' : ''}
-                    <hr>
-                    <p><em>Coletado com GeoMarker DMOB v2.0</em></p>
+                    <div style="font-family: Arial, sans-serif; max-width: 500px;">
+                        <h2 style="color: #1a5c2f; margin-bottom: 10px;">${point.name}</h2>
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                            <tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Categoria:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${getCategoryName(point.category)}</td></tr>
+                            <tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Município:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${point.municipio}</td></tr>
+                            <tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Descrição:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${point.description || 'Nenhuma descrição'}</td></tr>
+                            <tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Coordenadas:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</td></tr>
+                            <tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Data/Hora:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}</td></tr>
+                            <tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Método:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${point.source === 'gps' ? 'GPS' : 'Manual'}</td></tr>
+                            ${point.metadata.precisao ? `<tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Precisão:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">${point.metadata.precisao}</td></tr>` : ''}
+                            ${point.hasGeophoto ? '<tr><td style="padding: 4px; border-bottom: 1px solid #eee; font-weight: bold;">Possui foto:</td><td style="padding: 4px; border-bottom: 1px solid #eee;">Sim</td></tr>' : ''}
+                        </table>
+                `;
+                
+                if (point.photo) {
+                    description += `
+                        <div style="text-align: center; margin: 15px 0;">
+                            <img src="${point.photo}" style="max-width: 100%; max-height: 300px; border-radius: 5px; border: 2px solid #4caf50;">
+                            <div style="font-size: 0.9em; color: #666; margin-top: 5px;">Foto georreferenciada</div>
+                        </div>
+                    `;
+                }
+                
+                description += `
+                        <hr style="margin: 15px 0;">
+                        <div style="font-size: 0.8em; color: #888;">
+                            Coletado com GeoMarker DMOB v2.0 - Governo do Amazonas
+                        </div>
+                    </div>
                 ]]>`;
 
+                // Estrutura ExtendedData em formato tabular para ArcGIS
                 kmlContent += `
     <Placemark>
         <name>${point.name}</name>
@@ -1244,39 +1376,31 @@
         <TimeStamp>
             <when>${point.timestamp}</when>
         </TimeStamp>
+        <Style>
+            <IconStyle>
+                <Icon>
+                    <href>${point.photo ? 'https://maps.google.com/mapfiles/kml/pal4/icon57.png' : 'https://maps.google.com/mapfiles/kml/pal4/icon49.png'}</href>
+                </Icon>
+            </IconStyle>
+        </Style>
         <ExtendedData>
-            <Data name="sistema">
-                <value>${point.metadata.sistema}</value>
-            </Data>
-            <Data name="versao">
-                <value>${point.metadata.versao}</value>
-            </Data>
-            <Data name="projeto">
-                <value>${point.metadata.projeto}</value>
-            </Data>
-            <Data name="categoria">
-                <value>${getCategoryName(point.category)}</value>
-            </Data>
-            <Data name="municipio">
-                <value>${point.municipio}</value>
-            </Data>
-            <Data name="datum">
-                <value>${point.metadata.datum}</value>
-            </Data>
-            <Data name="metodo_coleta">
-                <value>${point.source === 'gps' ? 'GPS' : 'Manual'}</value>
-            </Data>
-            ${point.metadata.precisao ? `
-            <Data name="precisao">
-                <value>${point.metadata.precisao}</value>
-            </Data>` : ''}
-            ${point.metadata.foto ? `
-            <Data name="possui_foto">
-                <value>${point.metadata.foto}</value>
-            </Data>
-            <Data name="data_foto">
-                <value>${point.metadata.data_foto}</value>
-            </Data>` : ''}
+            <Data name="id"><value>${point.id}</value></Data>
+            <Data name="nome"><value>${point.name}</value></Data>
+            <Data name="categoria"><value>${getCategoryName(point.category)}</value></Data>
+            <Data name="municipio"><value>${point.municipio}</value></Data>
+            <Data name="descricao"><value>${point.description || 'Nenhuma'}</value></Data>
+            <Data name="latitude"><value>${point.lat.toFixed(6)}</value></Data>
+            <Data name="longitude"><value>${point.lng.toFixed(6)}</value></Data>
+            <Data name="data_coleta"><value>${date.toLocaleDateString('pt-BR')}</value></Data>
+            <Data name="hora_coleta"><value>${date.toLocaleTimeString('pt-BR')}</value></Data>
+            <Data name="metodo_coleta"><value>${point.source === 'gps' ? 'GPS' : 'Manual'}</value></Data>
+            <Data name="sistema"><value>${point.metadata.sistema}</value></Data>
+            <Data name="versao"><value>${point.metadata.versao}</value></Data>
+            <Data name="projeto"><value>${point.metadata.projeto}</value></Data>
+            <Data name="datum"><value>${point.metadata.datum}</value></Data>
+            ${point.metadata.precisao ? `<Data name="precisao"><value>${point.metadata.precisao}</value></Data>` : ''}
+            ${point.metadata.foto ? `<Data name="possui_foto"><value>${point.metadata.foto}</value></Data>` : '<Data name="possui_foto"><value>Não</value></Data>'}
+            ${point.metadata.data_foto ? `<Data name="data_foto"><value>${new Date(point.metadata.data_foto).toLocaleString('pt-BR')}</value></Data>` : ''}
         </ExtendedData>
         <Point>
             <coordinates>${point.lng},${point.lat},0</coordinates>
@@ -1384,9 +1508,19 @@
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
             
-            // Mostrar resultado e esconder preview
-            photoResult.style.display = 'flex';
-            cameraPreview.style.display = 'none';
+            // Se auto create point estiver ativado, criar ponto automaticamente
+            if (state.autoCreatePoint) {
+                createAutoPointWithPhoto(state.currentPhotoData);
+                // Adicionar à galeria
+                state.capturedPhotos.push(state.currentPhotoData);
+                updatePhotoGallery();
+                // Voltar para a câmera
+                retakePhotoFullscreen();
+            } else {
+                // Mostrar resultado e esconder preview (modo manual)
+                photoResult.style.display = 'flex';
+                cameraPreview.style.display = 'none';
+            }
         }
 
         function retakePhotoFullscreen() {
@@ -1415,7 +1549,7 @@
             a.download = filename;
             a.click();
             
-            alert('Foto salva na pasta DMOB_MIDIA!');
+            showMessage('Foto salva na pasta DMOB_MIDIA!');
             
             // Voltar para a visualização da câmera
             retakePhotoFullscreen();
@@ -1487,6 +1621,33 @@
             
             state.isCameraFullscreen = false;
             state.currentPhotoData = null;
+        }
+
+        // Função para mostrar mensagens
+        function showMessage(message) {
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.9);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 10000;
+                font-size: 14px;
+                border-left: 4px solid #4caf50;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            `;
+            messageEl.textContent = message;
+            document.body.appendChild(messageEl);
+            
+            setTimeout(() => {
+                if (document.body.contains(messageEl)) {
+                    document.body.removeChild(messageEl);
+                }
+            }, 3000);
         }
 
         // Armazenamento
