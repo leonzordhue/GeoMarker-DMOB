@@ -136,6 +136,13 @@
             margin-bottom: 15px; 
         }
         
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
         button { 
             padding: 12px; 
             border: none; 
@@ -542,6 +549,10 @@
                 top: 10px;
                 right: 10px;
             }
+            
+            .buttons, .export-buttons {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -646,7 +657,12 @@
                         <button id="add-gps-point" class="gps">🎯 Registrar com GPS</button>
                         <button id="center-map" class="secondary">🗺️ Centralizar</button>
                         <button id="clear-points" class="secondary">🗑️ Limpar</button>
+                    </div>
+                    
+                    <!-- Botões de Exportação -->
+                    <div class="export-buttons">
                         <button id="export-kml" class="secondary">📤 Exportar KML</button>
+                        <button id="export-geojson" class="secondary">🗺️ Exportar GeoJSON</button>
                     </div>
                 </div>
                 
@@ -853,6 +869,7 @@
             document.getElementById('add-gps-point').addEventListener('click', addGpsPoint);
             document.getElementById('clear-points').addEventListener('click', clearPoints);
             document.getElementById('export-kml').addEventListener('click', exportKml);
+            document.getElementById('export-geojson').addEventListener('click', exportGeoJSON);
             document.getElementById('center-map').addEventListener('click', centerMap);
             document.getElementById('locate-me').addEventListener('click', toggleGps);
             document.getElementById('go-to-coords').addEventListener('click', goToManualCoords);
@@ -1417,6 +1434,68 @@
             a.download = `KML/geomarker_dmob_${new Date().toISOString().split('T')[0]}.kml`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // NOVA FUNÇÃO: Exportar para GeoJSON
+        function exportGeoJSON() {
+            if (state.points.length === 0) {
+                alert("Nenhum ponto para exportar.");
+                return;
+            }
+
+            const geoJSON = {
+                type: "FeatureCollection",
+                features: state.points.map(point => {
+                    const date = new Date(point.timestamp);
+                    
+                    // Criar propriedades no formato GeoJSON
+                    const properties = {
+                        id: point.id,
+                        name: point.name,
+                        description: point.description || '',
+                        category: point.category,
+                        category_name: getCategoryName(point.category),
+                        municipio: point.municipio,
+                        timestamp: point.timestamp,
+                        date_formatted: date.toLocaleDateString('pt-BR'),
+                        time_formatted: date.toLocaleTimeString('pt-BR'),
+                        source: point.source,
+                        sistema: point.metadata.sistema,
+                        versao: point.metadata.versao,
+                        projeto: point.metadata.projeto,
+                        datum: point.metadata.datum,
+                        precisao: point.metadata.precisao || '',
+                        metodo_coleta: point.source === 'gps' ? 'GPS' : 'Manual',
+                        possui_foto: point.hasGeophoto ? 'Sim' : 'Não',
+                        data_foto: point.metadata.data_foto ? new Date(point.metadata.data_foto).toLocaleString('pt-BR') : ''
+                    };
+
+                    // Se houver foto, adicionar a URL base64 (cuidado: arquivo pode ficar grande)
+                    if (point.photo) {
+                        properties.photo = point.photo;
+                    }
+
+                    return {
+                        type: "Feature",
+                        geometry: {
+                            type: "Point",
+                            coordinates: [point.lng, point.lat] // GeoJSON usa [longitude, latitude]
+                        },
+                        properties: properties
+                    };
+                })
+            };
+
+            // Criar e fazer download do arquivo GeoJSON
+            const blob = new Blob([JSON.stringify(geoJSON, null, 2)], { type: 'application/geo+json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `GeoJSON/geomarker_dmob_${new Date().toISOString().split('T')[0]}.geojson`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('GeoJSON exportado com sucesso!');
         }
 
         // Funções da Câmera
