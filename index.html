@@ -409,12 +409,6 @@
             z-index: 10001;
         }
         
-        .camera-controls-buttons {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
         .camera-fullscreen-controls button {
             padding: 15px 25px;
             border-radius: 50px;
@@ -525,10 +519,6 @@
             .camera-fullscreen-controls {
                 flex-direction: column;
                 gap: 10px;
-            }
-            
-            .camera-controls-buttons {
-                order: 2;
             }
             
             .photo-gallery {
@@ -679,12 +669,9 @@
                 <button id="flash-off" class="small" title="Flash Desligado">🚫</button>
             </div>
             
-            <!-- Controles da Câmera -->
+            <!-- Controles da Câmera - APENAS FOTO -->
             <div class="camera-fullscreen-controls" id="camera-fullscreen-controls">
-                <div class="camera-controls-buttons">
-                    <button id="take-photo-fullscreen" class="gps">📷 Foto</button>
-                    <button id="record-video" class="secondary" title="Gravar Vídeo">🎥 Vídeo</button>
-                </div>
+                <button id="take-photo-fullscreen" class="gps">📷 Tirar Foto</button>
             </div>
             
             <div class="camera-fullscreen-result" id="camera-fullscreen-result">
@@ -789,9 +776,7 @@
             currentPhotoData: null,
             isCameraFullscreen: false,
             flashMode: 'auto',
-            capturedPhotos: [],
-            isRecording: false,
-            mediaRecorder: null
+            capturedPhotos: []
         };
 
         // Inicialização
@@ -859,7 +844,6 @@
             document.getElementById('use-photo-fullscreen').addEventListener('click', usePhotoFullscreen);
             document.getElementById('retake-photo-fullscreen').addEventListener('click', retakePhotoFullscreen);
             document.getElementById('photo-gallery').addEventListener('click', openPhotoGallery);
-            document.getElementById('record-video').addEventListener('click', toggleVideoRecording);
             
             // Flash controls
             document.getElementById('flash-auto').addEventListener('click', () => setFlashMode('auto'));
@@ -1355,8 +1339,9 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const photoResult = document.getElementById('camera-fullscreen-result');
             const photoPreview = document.getElementById('photo-preview-fullscreen');
+            const cameraControls = document.getElementById('camera-fullscreen-controls');
             
-            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview) {
+            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview || !cameraControls) {
                 console.error('Elementos da foto não encontrados');
                 return;
             }
@@ -1397,9 +1382,10 @@
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
             
-            // Mostrar resultado, esconder preview, mas manter controles visíveis
+            // CORREÇÃO: Mostrar resultado mas manter os controles visíveis
             photoResult.style.display = 'flex';
             cameraPreview.style.display = 'none';
+            // IMPORTANTE: Não esconder cameraControls - isso garante que o botão continue visível
         }
 
         function retakePhotoFullscreen() {
@@ -1407,7 +1393,7 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const cameraControls = document.getElementById('camera-fullscreen-controls');
             
-            // Mostrar preview e controles, esconder resultado
+            // CORREÇÃO: Mostrar preview e controles, esconder resultado
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
             if (cameraControls) cameraControls.style.display = 'flex';
@@ -1484,68 +1470,7 @@
             console.log(`Flash mode: ${mode}`);
         }
 
-        function toggleVideoRecording() {
-            if (!state.isRecording) {
-                startVideoRecording();
-            } else {
-                stopVideoRecording();
-            }
-        }
-
-        function startVideoRecording() {
-            if (!state.stream) return;
-            
-            try {
-                state.mediaRecorder = new MediaRecorder(state.stream);
-                const chunks = [];
-                
-                state.mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) {
-                        chunks.push(e.data);
-                    }
-                };
-                
-                state.mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'video/mp4' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    const now = new Date();
-                    const filename = `DMOB_MIDIA/geomarker_video_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours()}${now.getMinutes()}${now.getSeconds()}.mp4`;
-                    
-                    a.href = url;
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    
-                    alert('Vídeo salvo na pasta DMOB_MIDIA!');
-                };
-                
-                state.mediaRecorder.start();
-                state.isRecording = true;
-                document.getElementById('record-video').style.background = 'linear-gradient(135deg, #ff0000, #cc0000)';
-                document.getElementById('record-video').innerHTML = '⏹️ Parar';
-                
-            } catch (error) {
-                console.error('Erro ao gravar vídeo:', error);
-                alert('Erro ao iniciar gravação de vídeo');
-            }
-        }
-
-        function stopVideoRecording() {
-            if (state.mediaRecorder && state.isRecording) {
-                state.mediaRecorder.stop();
-                state.isRecording = false;
-                document.getElementById('record-video').style.background = 'linear-gradient(135deg, #1a5c2f, #4caf50)';
-                document.getElementById('record-video').innerHTML = '🎥 Vídeo';
-            }
-        }
-
         function closeCameraFullscreen() {
-            // Parar gravação se estiver ativa
-            if (state.isRecording) {
-                stopVideoRecording();
-            }
-            
             // Parar a stream da câmera
             if (state.stream) {
                 state.stream.getTracks().forEach(track => track.stop());
