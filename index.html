@@ -28,56 +28,32 @@
         }
         
         header { 
-            padding: 15px 20px; 
+            padding: 20px; 
             background: rgba(0, 0, 0, 0.7); 
             border-bottom: 2px solid rgba(76, 175, 80, 0.3); 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-        
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
             text-align: center;
-        }
-        
-        .brasao-amazonas {
-            width: 70px;
-            height: 70px;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-        }
-        
-        .title-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
         
         h1 { 
             font-size: 2.2rem; 
-            margin-bottom: 5px; 
+            margin-bottom: 8px; 
             background: linear-gradient(to right, #4caf50, #8bc34a); 
             -webkit-background-clip: text; 
             background-clip: text; 
             color: transparent;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .gov-badge {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             background: linear-gradient(135deg, #1a5c2f, #2d7d46);
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 15px;
             color: white;
             font-weight: 600;
             border: 1px solid #4caf50;
+            display: inline-block;
+            margin-top: 5px;
         }
         
         header p {
@@ -570,20 +546,6 @@
                 min-width: 100%;
             }
             
-            .header-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .brasao-amazonas {
-                width: 50px;
-                height: 50px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
             .camera-fullscreen-controls {
                 flex-direction: column;
                 gap: 10px;
@@ -612,16 +574,9 @@
 <body>
     <div class="container">
         <header>
-            <div class="header-content">
-                <img src="brasao-do-amazonas-1.png" alt="Brasão do Estado do Amazonas" class="brasao-amazonas">
-                <div class="title-container">
-                    <h1>
-                        GeoMarker - DMOB
-                        <span class="gov-badge">GOVERNO DO AMAZONAS</span>
-                    </h1>
-                    <p>Sistema de marcação geográfica para obras de arte especiais</p>
-                </div>
-            </div>
+            <h1>GeoMarker - DMOB</h1>
+            <div class="gov-badge">GOVERNO DO AMAZONAS</div>
+            <p>Sistema de marcação geográfica para obras de arte especiais</p>
         </header>
         
         <div class="app-content">
@@ -786,7 +741,68 @@
         // Municípios do Amazonas (lista completa)
         const municipios = [
             { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
-            // ... (mantenha a lista completa de municípios)
+            { id: 'alvaraes', nome: 'Alvarães', lat: -3.2142, lng: -64.8044 },
+            { id: 'amatura', nome: 'Amaturá', lat: -3.3639, lng: -68.7969 },
+            { id: 'anama', nome: 'Anamã', lat: -3.5844, lng: -61.4042 },
+            { id: 'anori', nome: 'Anori', lat: -3.7722, lng: -61.6442 },
+            { id: 'apui', nome: 'Apuí', lat: -7.1942, lng: -59.8939 },
+            { id: 'atalaia-do-norte', nome: 'Atalaia do Norte', lat: -4.3725, lng: -70.1919 },
+            { id: 'autazes', nome: 'Autazes', lat: -3.5797, lng: -59.1308 },
+            { id: 'barcelos', nome: 'Barcelos', lat: -0.9736, lng: -62.9261 },
+            { id: 'barreirinha', nome: 'Barreirinha', lat: -2.7939, lng: -57.0678 },
+            { id: 'benjamin-constant', nome: 'Benjamin Constant', lat: -4.3758, lng: -70.0319 },
+            { id: 'beruri', nome: 'Beruri', lat: -3.8989, lng: -61.3711 },
+            { id: 'boa-vista-do-ramos', nome: 'Boa Vista do Ramos', lat: -2.9742, lng: -57.5878 },
+            { id: 'boca-do-acre', nome: 'Boca do Acre', lat: -8.7522, lng: -67.3978 },
+            { id: 'borba', nome: 'Borba', lat: -4.3914, lng: -59.5886 },
+            { id: 'caapiranga', nome: 'Caapiranga', lat: -3.3289, lng: -61.2139 },
+            { id: 'canutama', nome: 'Canutama', lat: -6.5339, lng: -64.3831 },
+            { id: 'carauari', nome: 'Carauari', lat: -4.8825, lng: -66.8958 },
+            { id: 'careiro', nome: 'Careiro', lat: -3.7681, lng: -60.3692 },
+            { id: 'careiro-da-varzea', nome: 'Careiro da Várzea', lat: -3.1972, lng: -59.8264 },
+            { id: 'coari', nome: 'Coari', lat: -4.0850, lng: -63.1414 },
+            { id: 'codajas', nome: 'Codajás', lat: -3.8367, lng: -62.0569 },
+            { id: 'eirunepe', nome: 'Eirunepé', lat: -6.6597, lng: -69.8736 },
+            { id: 'envira', nome: 'Envira', lat: -7.4378, lng: -70.0281 },
+            { id: 'fonte-boa', nome: 'Fonte Boa', lat: -2.5139, lng: -66.0919 },
+            { id: 'guajara', nome: 'Guajará', lat: -7.5378, lng: -72.5811 },
+            { id: 'humaita', nome: 'Humaitá', lat: -7.5114, lng: -63.0206 },
+            { id: 'ipixuna', nome: 'Ipixuna', lat: -7.0478, lng: -71.6939 },
+            { id: 'iranduba', nome: 'Iranduba', lat: -3.2847, lng: -60.1861 },
+            { id: 'itacoatiara', nome: 'Itacoatiara', lat: -3.1431, lng: -58.4442 },
+            { id: 'itamarati', nome: 'Itamarati', lat: -6.4386, lng: -68.2439 },
+            { id: 'itapiranga', nome: 'Itapiranga', lat: -2.7461, lng: -58.0203 },
+            { id: 'japura', nome: 'Japurá', lat: -1.8822, lng: -66.9994 },
+            { id: 'jurua', nome: 'Juruá', lat: -3.4742, lng: -66.0636 },
+            { id: 'jutaí', nome: 'Jutaí', lat: -2.7431, lng: -66.7689 },
+            { id: 'lábrea', nome: 'Lábrea', lat: -7.2642, lng: -64.7947 },
+            { id: 'manacapuru', nome: 'Manacapuru', lat: -3.3008, lng: -60.6206 },
+            { id: 'manaquiri', nome: 'Manaquiri', lat: -3.4328, lng: -60.4589 },
+            { id: 'manaus', nome: 'Manaus', lat: -3.1190, lng: -60.0217 },
+            { id: 'manicore', nome: 'Manicoré', lat: -5.8092, lng: -61.3003 },
+            { id: 'maraa', nome: 'Maraã', lat: -1.8531, lng: -65.5731 },
+            { id: 'maues', nome: 'Maués', lat: -3.3839, lng: -57.7186 },
+            { id: 'nhamunda', nome: 'Nhamundá', lat: -2.1861, lng: -56.7131 },
+            { id: 'nova-olinda-do-norte', nome: 'Nova Olinda do Norte', lat: -3.8889, lng: -59.0942 },
+            { id: 'novo-airão', nome: 'Novo Airão', lat: -2.6211, lng: -60.9439 },
+            { id: 'novo-aripuana', nome: 'Novo Aripuanã', lat: -5.1258, lng: -60.3731 },
+            { id: 'parintins', nome: 'Parintins', lat: -2.6276, lng: -56.7358 },
+            { id: 'pauini', nome: 'Pauini', lat: -7.7136, lng: -66.9764 },
+            { id: 'presidente-figueiredo', nome: 'Presidente Figueiredo', lat: -2.0344, lng: -60.0253 },
+            { id: 'rio-preto-da-eva', nome: 'Rio Preto da Eva', lat: -2.6975, lng: -59.7011 },
+            { id: 'santa-isabel-do-rio-negro', nome: 'Santa Isabel do Rio Negro', lat: -0.4139, lng: -65.0192 },
+            { id: 'santo-antonio-do-ica', nome: 'Santo Antônio do Içá', lat: -3.1022, lng: -67.9397 },
+            { id: 'sao-gabriel-da-cachoeira', nome: 'São Gabriel da Cachoeira', lat: -0.1306, lng: -67.0892 },
+            { id: 'sao-paulo-de-olivenca', nome: 'São Paulo de Olivença', lat: -3.4658, lng: -68.8728 },
+            { id: 'sao-sebastiao-do-uatuma', nome: 'São Sebastião do Uatumã', lat: -2.5708, lng: -57.8731 },
+            { id: 'silves', nome: 'Silves', lat: -2.8411, lng: -58.2081 },
+            { id: 'tabatinga', nome: 'Tabatinga', lat: -4.2253, lng: -69.9383 },
+            { id: 'tapaua', nome: 'Tapauá', lat: -5.6208, lng: -63.1831 },
+            { id: 'tefe', nome: 'Tefé', lat: -3.3547, lng: -64.7108 },
+            { id: 'tonantins', nome: 'Tonantins', lat: -2.8731, lng: -67.8022 },
+            { id: 'uarini', nome: 'Uarini', lat: -2.9903, lng: -65.1081 },
+            { id: 'urucara', nome: 'Urucará', lat: -2.5369, lng: -57.7589 },
+            { id: 'urucurituba', nome: 'Urucurituba', lat: -3.1286, lng: -58.1553 }
         ];
 
         // Estado da aplicação
@@ -802,7 +818,7 @@
             stream: null,
             currentPhotoData: null,
             isCameraFullscreen: false,
-            flashMode: 'auto', // auto, on, off
+            flashMode: 'auto',
             capturedPhotos: [],
             isRecording: false,
             mediaRecorder: null
@@ -810,6 +826,7 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Iniciando aplicação...');
             initMap();
             setupEventListeners();
             loadPointsFromStorage();
@@ -824,9 +841,506 @@
             }
         });
 
-        // ... (mantenha todas as funções existentes do mapa, GPS, pontos, etc.)
+        function initMap() {
+            console.log('Inicializando mapa...');
+            try {
+                state.map = L.map('map', config);
+                
+                // Estilo do mapa - Google Earth-like
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '&copy; Esri, Earthstar Geographics'
+                }).addTo(state.map);
 
-        // ===== NOVAS FUNÇÕES DA CÂMERA CORRIGIDAS =====
+                // Adicionar também uma camada de rótulos para melhor legibilidade
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '&copy; Esri'
+                }).addTo(state.map);
+
+                state.map.on('click', function(e) {
+                    updateCoordinates(e.latlng.lat, e.latlng.lng);
+                    updateMarker(e.latlng.lat, e.latlng.lng);
+                });
+
+                updateCoordinates(config.center[0], config.center[1]);
+                populateMunicipios();
+                console.log('Mapa inicializado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao inicializar mapa:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            console.log('Configurando event listeners...');
+            
+            // Botões principais
+            document.getElementById('add-point').addEventListener('click', addPoint);
+            document.getElementById('add-gps-point').addEventListener('click', addGpsPoint);
+            document.getElementById('clear-points').addEventListener('click', clearPoints);
+            document.getElementById('export-kml').addEventListener('click', exportKml);
+            document.getElementById('center-map').addEventListener('click', centerMap);
+            document.getElementById('locate-me').addEventListener('click', toggleGps);
+            document.getElementById('go-to-coords').addEventListener('click', goToManualCoords);
+            
+            // Câmera
+            document.getElementById('start-camera').addEventListener('click', startCameraFullscreen);
+            document.getElementById('close-camera-fullscreen').addEventListener('click', closeCameraFullscreen);
+            document.getElementById('take-photo-fullscreen').addEventListener('click', takePhotoFullscreen);
+            document.getElementById('save-photo-fullscreen').addEventListener('click', savePhotoToDevice);
+            document.getElementById('use-photo-fullscreen').addEventListener('click', usePhotoFullscreen);
+            document.getElementById('retake-photo-fullscreen').addEventListener('click', retakePhotoFullscreen);
+            document.getElementById('photo-gallery').addEventListener('click', openPhotoGallery);
+            document.getElementById('record-video').addEventListener('click', toggleVideoRecording);
+            
+            // Flash controls
+            document.getElementById('flash-auto').addEventListener('click', () => setFlashMode('auto'));
+            document.getElementById('flash-on').addEventListener('click', () => setFlashMode('on'));
+            document.getElementById('flash-off').addEventListener('click', () => setFlashMode('off'));
+            
+            // Navegação
+            document.getElementById('zoom-in').addEventListener('click', () => state.map.zoomIn());
+            document.getElementById('zoom-out').addEventListener('click', () => state.map.zoomOut());
+            document.getElementById('municipio-select').addEventListener('change', changeMunicipio);
+            document.getElementById('search-location').addEventListener('keypress', searchLocation);
+            
+            // Tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
+                });
+            });
+            
+            console.log('Event listeners configurados!');
+        }
+
+        // Funções do Mapa
+        function updateCoordinates(lat, lng) {
+            state.currentLat = lat;
+            state.currentLng = lng;
+            document.getElementById('current-coords').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+
+        function updateMarker(lat, lng) {
+            if (state.currentMarker) state.map.removeLayer(state.currentMarker);
+            state.currentMarker = L.marker([lat, lng]).addTo(state.map);
+        }
+
+        function populateMunicipios() {
+            const select = document.getElementById('municipio-select');
+            municipios.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.id;
+                option.textContent = m.nome;
+                select.appendChild(option);
+            });
+        }
+
+        function changeMunicipio() {
+            const municipio = municipios.find(m => m.id === document.getElementById('municipio-select').value);
+            if (municipio) {
+                state.map.setView([municipio.lat, municipio.lng], 10);
+                updateCoordinates(municipio.lat, municipio.lng);
+            }
+        }
+
+        function searchLocation(e) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('search-location').value.toLowerCase();
+                const municipio = municipios.find(m => m.nome.toLowerCase().includes(query));
+                if (municipio) {
+                    state.map.setView([municipio.lat, municipio.lng], 12);
+                    updateCoordinates(municipio.lat, municipio.lng);
+                    document.getElementById('municipio-select').value = municipio.id;
+                }
+            }
+        }
+
+        function goToManualCoords() {
+            const lat = parseFloat(document.getElementById('manual-lat').value);
+            const lng = parseFloat(document.getElementById('manual-lng').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                state.map.setView([lat, lng], 15);
+                updateCoordinates(lat, lng);
+                updateMarker(lat, lng);
+            }
+        }
+
+        function centerMap() {
+            const municipio = municipios.find(m => m.id === document.getElementById('municipio-select').value);
+            if (municipio) {
+                state.map.setView([municipio.lat, municipio.lng], 10);
+            }
+        }
+
+        // Funções do GPS
+        function toggleGps() {
+            state.isGpsActive ? stopGps() : startGps();
+        }
+
+        function startGps() {
+            if (!navigator.geolocation) {
+                alert("GPS não suportado pelo navegador");
+                return;
+            }
+            
+            // Parar qualquer monitoramento anterior
+            if (state.gpsWatchId) {
+                navigator.geolocation.clearWatch(state.gpsWatchId);
+            }
+            
+            // Opções para maior precisão
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            state.gpsWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    updateCoordinates(lat, lng);
+                    state.map.setView([lat, lng], 16);
+                    
+                    // Atualizar ou criar marcador do GPS
+                    if (state.gpsMarker) {
+                        state.gpsMarker.setLatLng([lat, lng]);
+                    } else {
+                        state.gpsMarker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                className: 'gps-marker',
+                                html: '📍',
+                                iconSize: [30, 30]
+                            })
+                        }).addTo(state.map);
+                    }
+                    
+                    // Adicionar círculo de precisão
+                    if (state.accuracyCircle) {
+                        state.map.removeLayer(state.accuracyCircle);
+                    }
+                    state.accuracyCircle = L.circle([lat, lng], {
+                        radius: position.coords.accuracy,
+                        color: '#2196f3',
+                        fillColor: '#2196f3',
+                        fillOpacity: 0.1,
+                        weight: 1
+                    }).addTo(state.map);
+                    
+                    document.getElementById('gps-accuracy').textContent = Math.round(position.coords.accuracy);
+                    document.getElementById('gps-accuracy-fullscreen').textContent = Math.round(position.coords.accuracy);
+                    document.getElementById('gps-status').style.display = 'block';
+                    document.getElementById('locate-me').classList.add('gps-active');
+                    state.isGpsActive = true;
+                },
+                (error) => {
+                    console.error('Erro GPS:', error);
+                    let message = "Erro ao obter localização: ";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            message += "Permissão negada.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message += "Localização indisponível.";
+                            break;
+                        case error.TIMEOUT:
+                            message += "Tempo esgotado.";
+                            break;
+                        default:
+                            message += "Erro desconhecido.";
+                    }
+                    alert(message);
+                    stopGps();
+                },
+                options
+            );
+        }
+
+        function stopGps() {
+            if (state.gpsWatchId) {
+                navigator.geolocation.clearWatch(state.gpsWatchId);
+                state.gpsWatchId = null;
+            }
+            
+            if (state.gpsMarker) {
+                state.map.removeLayer(state.gpsMarker);
+                state.gpsMarker = null;
+            }
+            
+            if (state.accuracyCircle) {
+                state.map.removeLayer(state.accuracyCircle);
+                state.accuracyCircle = null;
+            }
+            
+            document.getElementById('gps-status').style.display = 'none';
+            document.getElementById('locate-me').classList.remove('gps-active');
+            state.isGpsActive = false;
+        }
+
+        // Funções dos Pontos
+        function addPoint() {
+            const name = document.getElementById('point-name').value || `Ponto ${state.points.length + 1}`;
+            const description = document.getElementById('point-desc').value;
+            const category = document.getElementById('point-category').value;
+            const municipio = municipios.find(m => m.id === document.getElementById('municipio-select').value);
+
+            const point = {
+                id: Date.now(), name, description, category,
+                lat: state.currentLat, lng: state.currentLng,
+                timestamp: new Date().toISOString(),
+                municipio: municipio ? municipio.nome : 'Desconhecido',
+                source: 'manual',
+                metadata: {
+                    sistema: "GeoMarker DMOB",
+                    versao: "2.0",
+                    projeto: "Obras de Arte Especiais",
+                    datum: "WGS84",
+                    precisao: state.isGpsActive ? document.getElementById('gps-accuracy').textContent + 'm' : 'Manual'
+                }
+            };
+
+            if (state.currentPhotoData) {
+                point.photo = state.currentPhotoData;
+                point.hasGeophoto = true;
+                point.metadata.foto = "Sim";
+                point.metadata.data_foto = new Date().toISOString();
+            }
+
+            state.points.push(point);
+            renderPointsList();
+            addPointToMap(point);
+            savePointsToStorage();
+            updateStats();
+
+            document.getElementById('point-name').value = '';
+            document.getElementById('point-desc').value = '';
+        }
+
+        function addGpsPoint() {
+            if (!state.isGpsActive) {
+                alert("Ative o GPS primeiro para registrar com localização precisa");
+                return;
+            }
+            
+            const name = document.getElementById('point-name').value || `GPS ${state.points.length + 1}`;
+            const point = {
+                id: Date.now(), name,
+                description: document.getElementById('point-desc').value || 'Registrado via GPS',
+                category: document.getElementById('point-category').value,
+                lat: state.currentLat, lng: state.currentLng,
+                timestamp: new Date().toISOString(),
+                municipio: municipios.find(m => m.id === document.getElementById('municipio-select').value)?.nome || 'Desconhecido',
+                source: 'gps',
+                metadata: {
+                    sistema: "GeoMarker DMOB",
+                    versao: "2.0",
+                    projeto: "Obras de Arte Especiais",
+                    datum: "WGS84",
+                    precisao: document.getElementById('gps-accuracy').textContent + 'm',
+                    metodo_coleta: "GPS"
+                }
+            };
+
+            if (state.currentPhotoData) {
+                point.photo = state.currentPhotoData;
+                point.hasGeophoto = true;
+                point.metadata.foto = "Sim";
+                point.metadata.data_foto = new Date().toISOString();
+            }
+
+            state.points.push(point);
+            renderPointsList();
+            addPointToMap(point);
+            savePointsToStorage();
+            updateStats();
+
+            document.getElementById('point-name').value = '';
+            document.getElementById('point-desc').value = '';
+        }
+
+        function addPointToMap(point) {
+            const marker = L.marker([point.lat, point.lng]).addTo(state.map);
+            
+            const popupContent = `
+                <div style="min-width:200px;">
+                    <h3>${point.name} ${point.hasGeophoto ? '📍' : ''}</h3>
+                    <p>${point.description}</p>
+                    <p><small>${getCategoryName(point.category)} - ${point.municipio}</small></p>
+                    <p><small>${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</small></p>
+                    ${point.photo ? `<img src="${point.photo}" style="max-width:100%;border-radius:5px;margin-top:5px;">` : ''}
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            point.marker = marker;
+        }
+
+        function renderPointsList() {
+            const container = document.getElementById('points-container');
+            const count = document.getElementById('points-count');
+            
+            count.textContent = state.points.length;
+            
+            if (state.points.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:20px;color:#aaa;">Nenhum ponto registrado</p>';
+                return;
+            }
+
+            container.innerHTML = state.points.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(point => {
+                const date = new Date(point.timestamp);
+                return `
+                <div class="point-item ${point.photo ? 'point-has-photo' : ''}">
+                    <div class="point-info">
+                        <div class="point-name">${point.name}</div>
+                        <div class="point-details">
+                            ${getCategoryName(point.category)} • ${point.municipio}<br>
+                            ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}
+                        </div>
+                    </div>
+                    <div class="point-actions">
+                        <button class="view-point" data-id="${point.id}">👁️</button>
+                        ${point.photo ? `<button class="view-photo" data-id="${point.id}">📸</button>` : ''}
+                        <button class="delete-point" data-id="${point.id}">🗑️</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Event listeners para os botões dos pontos
+            container.querySelectorAll('.view-point').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const point = state.points.find(p => p.id === parseInt(btn.dataset.id));
+                    if (point) state.map.setView([point.lat, point.lng], 15);
+                });
+            });
+
+            container.querySelectorAll('.delete-point').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const point = state.points.find(p => p.id === parseInt(btn.dataset.id));
+                    if (point && confirm(`Excluir "${point.name}"?`)) {
+                        if (point.marker) state.map.removeLayer(point.marker);
+                        state.points = state.points.filter(p => p.id !== point.id);
+                        renderPointsList();
+                        savePointsToStorage();
+                        updateStats();
+                    }
+                });
+            });
+        }
+
+        function clearPoints() {
+            if (state.points.length === 0 || !confirm('Limpar todos os pontos?')) return;
+            state.points.forEach(point => { if (point.marker) state.map.removeLayer(point.marker); });
+            state.points = [];
+            renderPointsList();
+            savePointsToStorage();
+            updateStats();
+        }
+
+        function getCategoryName(category) {
+            const categories = {
+                'ponte-oae': 'Ponte - OAE', 'bueiro-oae': 'Bueiro - OAE', 
+                'galeria-oae': 'Galeria - OAE', 'viario-urbano': 'Viário - Urbano',
+                'jazida': 'Jazida', 'ramal': 'Ramal', 'rodovia': 'Rodovia',
+                'patologias-pista': 'Patologias', 'viaduto-oae': 'Viaduto - OAE'
+            };
+            return categories[category] || 'Desconhecida';
+        }
+
+        function updateStats() {
+            // Função mantida para compatibilidade
+        }
+
+        function exportKml() {
+            if (state.points.length === 0) return;
+            
+            let kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+    <name>GeoMarker - DMOB</name>
+    <description>Pontos georreferenciados coletados pelo sistema GeoMarker DMOB</description>
+    <open>1</open>`;
+
+            state.points.forEach(point => {
+                const date = new Date(point.timestamp);
+                
+                // Criar descrição rica em metadados para ArcGIS
+                let description = `<![CDATA[
+                    <h3>${point.name}</h3>
+                    <p><strong>Categoria:</strong> ${getCategoryName(point.category)}</p>
+                    <p><strong>Município:</strong> ${point.municipio}</p>
+                    <p><strong>Descrição:</strong> ${point.description || 'Nenhuma descrição'}</p>
+                    <p><strong>Coordenadas:</strong> ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</p>
+                    <p><strong>Data/Hora:</strong> ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR')}</p>
+                    <p><strong>Método:</strong> ${point.source === 'gps' ? 'GPS' : 'Manual'}</p>
+                    ${point.metadata.precisao ? `<p><strong>Precisão:</strong> ${point.metadata.precisao}</p>` : ''}
+                    ${point.hasGeophoto ? '<p><strong>Possui foto georreferenciada</strong></p>' : ''}
+                    <hr>
+                    <p><em>Coletado com GeoMarker DMOB v2.0</em></p>
+                ]]>`;
+
+                kmlContent += `
+    <Placemark>
+        <name>${point.name}</name>
+        <description>${description}</description>
+        <TimeStamp>
+            <when>${point.timestamp}</when>
+        </TimeStamp>
+        <ExtendedData>
+            <Data name="sistema">
+                <value>${point.metadata.sistema}</value>
+            </Data>
+            <Data name="versao">
+                <value>${point.metadata.versao}</value>
+            </Data>
+            <Data name="projeto">
+                <value>${point.metadata.projeto}</value>
+            </Data>
+            <Data name="categoria">
+                <value>${getCategoryName(point.category)}</value>
+            </Data>
+            <Data name="municipio">
+                <value>${point.municipio}</value>
+            </Data>
+            <Data name="datum">
+                <value>${point.metadata.datum}</value>
+            </Data>
+            <Data name="metodo_coleta">
+                <value>${point.source === 'gps' ? 'GPS' : 'Manual'}</value>
+            </Data>
+            ${point.metadata.precisao ? `
+            <Data name="precisao">
+                <value>${point.metadata.precisao}</value>
+            </Data>` : ''}
+            ${point.metadata.foto ? `
+            <Data name="possui_foto">
+                <value>${point.metadata.foto}</value>
+            </Data>` : ''}
+        </ExtendedData>
+        <Point>
+            <coordinates>${point.lng},${point.lat},0</coordinates>
+        </Point>
+    </Placemark>`;
+            });
+
+            kmlContent += `\n</Document>\n</kml>`;
+
+            const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KML/geomarker_dmob_${new Date().toISOString().split('T')[0]}.kml`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Funções da Câmera
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
 
         async function startCameraFullscreen() {
             try {
@@ -912,10 +1426,10 @@
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
             
-            // CORREÇÃO DEFINITIVA DO BUG: Não esconder os controles principais
+            // CORREÇÃO: Mostrar resultado, esconder preview, mas manter controles visíveis
             photoResult.style.display = 'flex';
             cameraPreview.style.display = 'none';
-            // NÃO esconder cameraControls aqui - isso causa o bug
+            // NÃO esconder cameraControls - isso causa o bug
         }
 
         function retakePhotoFullscreen() {
@@ -923,7 +1437,7 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const cameraControls = document.getElementById('camera-fullscreen-controls');
             
-            // CORREÇÃO DEFINITIVA: Mostrar preview e controles, esconder resultado
+            // CORREÇÃO: Mostrar preview e controles, esconder resultado
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
             if (cameraControls) cameraControls.style.display = 'flex';
@@ -987,13 +1501,6 @@
             }
         }
 
-        // Controles de Flash
-        function setupFlashControls() {
-            document.getElementById('flash-auto').addEventListener('click', () => setFlashMode('auto'));
-            document.getElementById('flash-on').addEventListener('click', () => setFlashMode('on'));
-            document.getElementById('flash-off').addEventListener('click', () => setFlashMode('off'));
-        }
-
         function setFlashMode(mode) {
             state.flashMode = mode;
             
@@ -1004,11 +1511,9 @@
             document.getElementById(`flash-${mode}`).classList.add('active');
             
             // Em um app real, aqui você controlaria o flash da câmera
-            // Como é HTML5, simulamos o comportamento
             console.log(`Flash mode: ${mode}`);
         }
 
-        // Gravação de Vídeo
         function toggleVideoRecording() {
             if (!state.isRecording) {
                 startVideoRecording();
@@ -1092,28 +1597,23 @@
             state.currentPhotoData = null;
         }
 
-        // Atualizar event listeners
-        function setupEventListeners() {
-            // ... (mantenha os event listeners existentes)
-            
-            // Novos event listeners da câmera
-            document.getElementById('start-camera').addEventListener('click', startCameraFullscreen);
-            document.getElementById('close-camera-fullscreen').addEventListener('click', closeCameraFullscreen);
-            document.getElementById('take-photo-fullscreen').addEventListener('click', takePhotoFullscreen);
-            document.getElementById('save-photo-fullscreen').addEventListener('click', savePhotoToDevice);
-            document.getElementById('use-photo-fullscreen').addEventListener('click', usePhotoFullscreen);
-            document.getElementById('retake-photo-fullscreen').addEventListener('click', retakePhotoFullscreen);
-            document.getElementById('photo-gallery').addEventListener('click', openPhotoGallery);
-            document.getElementById('record-video').addEventListener('click', toggleVideoRecording);
-            
-            // Configurar controles de flash
-            setupFlashControls();
-            
-            // ... (restante dos event listeners)
+        // Armazenamento
+        function savePointsToStorage() {
+            localStorage.setItem('geomarkerPoints', JSON.stringify(state.points));
         }
 
-        // ... (mantenha as demais funções existentes)
-
+        function loadPointsFromStorage() {
+            const saved = localStorage.getItem('geomarkerPoints');
+            if (saved) {
+                try {
+                    state.points = JSON.parse(saved);
+                    state.points.forEach(point => addPointToMap(point));
+                    renderPointsList();
+                } catch (e) {
+                    console.error('Erro ao carregar pontos:', e);
+                }
+            }
+        }
     </script>
 </body>
 </html>
