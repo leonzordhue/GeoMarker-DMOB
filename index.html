@@ -537,7 +537,7 @@
     <div class="container">
         <header>
             <h1>GeoMarker - DMOB</h1>
-            <p>Sistema de marcação geográfica para obras de arte especiais</p>
+            <p>Sistema de georreferenciamento desenvolvido pelo departamento de mobilidade do Amazonas</p>
         </header>
         
         <div class="app-content">
@@ -654,7 +654,7 @@
         <div class="camera-fullscreen-content">
             <div class="camera-fullscreen-preview" id="camera-fullscreen-preview">
                 <video id="video-fullscreen" autoplay playsinline></video>
-                <canvas id="canvas-fullscreen"></canvas>
+                <canvas id="canvas-fullscreen" style="display:none;"></canvas>
             </div>
             
             <!-- Galeria de Fotos -->
@@ -1339,9 +1339,8 @@
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const photoResult = document.getElementById('camera-fullscreen-result');
             const photoPreview = document.getElementById('photo-preview-fullscreen');
-            const cameraControls = document.getElementById('camera-fullscreen-controls');
             
-            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview || !cameraControls) {
+            if (!video || !canvas || !cameraPreview || !photoResult || !photoPreview) {
                 console.error('Elementos da foto não encontrados');
                 return;
             }
@@ -1382,21 +1381,18 @@
             state.currentPhotoData = canvas.toDataURL('image/jpeg');
             photoPreview.src = state.currentPhotoData;
             
-            // CORREÇÃO: Mostrar resultado mas manter os controles visíveis
+            // Mostrar resultado e esconder preview
             photoResult.style.display = 'flex';
             cameraPreview.style.display = 'none';
-            // IMPORTANTE: Não esconder cameraControls - isso garante que o botão continue visível
         }
 
         function retakePhotoFullscreen() {
             const photoResult = document.getElementById('camera-fullscreen-result');
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
-            const cameraControls = document.getElementById('camera-fullscreen-controls');
             
-            // CORREÇÃO: Mostrar preview e controles, esconder resultado
+            // Mostrar preview e esconder resultado
             if (photoResult) photoResult.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'block';
-            if (cameraControls) cameraControls.style.display = 'flex';
             
             state.currentPhotoData = null;
         }
@@ -1481,12 +1477,10 @@
             const cameraFullscreen = document.getElementById('camera-fullscreen');
             const cameraPreview = document.getElementById('camera-fullscreen-preview');
             const photoResult = document.getElementById('camera-fullscreen-result');
-            const cameraControls = document.getElementById('camera-fullscreen-controls');
             
             if (cameraFullscreen) cameraFullscreen.style.display = 'none';
             if (cameraPreview) cameraPreview.style.display = 'none';
             if (photoResult) photoResult.style.display = 'none';
-            if (cameraControls) cameraControls.style.display = 'flex';
             
             state.isCameraFullscreen = false;
             state.currentPhotoData = null;
